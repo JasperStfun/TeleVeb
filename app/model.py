@@ -1,12 +1,13 @@
-from flask_sqlalchemy import SQLAlchemy
+from app import db
 
-db = SQLAlchemy()
 
 class User(db.Model):
     user = db.Column(db.Integer, primary_key=True)
     nickname = db.Column(db.String(21), nullable=False, unique=True)
     email = db.Column(db.String(120), nullable=False, unique=True)
     password = db.Column(db.String(28), nullable=False)
+    def __repr__(self):
+        return f'<User {self.nickname}>'
 
 
 class UserPicture(db.Model):
