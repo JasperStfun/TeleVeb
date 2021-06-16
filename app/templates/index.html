@@ -1,0 +1,14 @@
+<html>
+    <head>
+        {% if title %}
+        <title>{{ title }} - TeleVeb</title>
+        {% else %}
+        <title>Welcome to TeleVeb</title>
+        {% endif %}
+    </head>
+    <body>
+        {% block content %}
+            <h1>Hi, {{ current_user.username }}!</h1>
+        {% endblock %}
+    </body>
+</html>
