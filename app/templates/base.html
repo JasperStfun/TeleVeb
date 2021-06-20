@@ -1,0 +1,21 @@
+<html>
+    <head>
+      {% if title %}
+      <title>{{ title }} - TeleVeb</title>
+      {% else %}
+      <title>Welcome to TeleVeb</title>
+      {% endif %}
+    </head>
+    <body>
+        <div>TeleVeb: 
+            <a href="{{ url_for('index') }}">Home</a>
+            {% if current_user.is_anonymous %}
+            <a href="{{ url_for('login') }}">Login</a>
+            {% else %}
+            <a href="{{ url_for('logout') }}">Logout</a>
+            {% endif %}      
+        </div>
+        <hr>
+        {% block content %}{% endblock %}
+    </body>
+</html>
