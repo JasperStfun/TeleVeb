@@ -25,7 +25,7 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return f'<User: {self.nickname} id: {self.id}>'
+        return f'<User: {self.username} id: {self.id}>'
 
 
 class Message(db.Model):
@@ -44,3 +44,6 @@ class Chat(db.Model):
     chat_id = db.Column(db.Integer, primary_key=True)
     user_1_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user_2_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    def __repr__(self):
+        return f'<Chat: {self.chat_id} user_1_id: {self.user_1_id} user_2_id: {self.user_2_id}>'
