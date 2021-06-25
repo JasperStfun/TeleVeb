@@ -3,7 +3,7 @@ from flask import render_template, flash, redirect, request, url_for
 from app import app, db
 from app.forms import LoginForm, RegistrationForm
 from flask_login import current_user, login_user, login_required, logout_user
-from app.model import User
+from app.model import User, Chat
 from werkzeug.urls import url_parse
 
 
@@ -51,3 +51,32 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+
+@app.route('/welcome_to_chat/', methods = ['GET', 'POST'])
+def welcome_to_chat():
+    if current_user.is_authenticated:
+        users = User.query.order_by(User.username).all()
+        return render_template('welcome_to_chat.html', users=users)
+    flash('Login or register')
+    return redirect(url_for('login'))
+
+
+@app.route('/welcome_to_chat/<pk>', methods = ['GET', 'POST'])
+def chat(pk):
+    if current_user.is_authenticated:
+        user_1 = current_user
+        user_2 = User.query.get(pk)
+        chat_check_1 = Chat.query.filter(Chat.user_1_id==user_1.id, Chat.user_2_id==user_2.id).first()
+        chat_check_2 = Chat.query.filter(Chat.user_1_id==user_2.id, Chat.user_2_id==user_1.id).first()
+        if chat_check_1 is None and chat_check_2 is None:
+            create_chat(user_1, user_2)
+        
+        return render_template('chat.html', user_1=user_1, user_2=user_2)
+    flash('Login or register')
+    return redirect(url_for('login'))
+
+def create_chat(user_1, user_2):
+    chat = Chat(user_1_id=user_1.id, user_2_id=user_2.id)
+    db.session.add(chat)
+    db.session.commit()
