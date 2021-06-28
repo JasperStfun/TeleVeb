@@ -1,17 +1,27 @@
 # -*- coding: utf-8 -*-
 from flask import render_template, flash, redirect, request, url_for
 from app import app, db
-from app.forms import LoginForm, RegistrationForm
+from app.forms import LoginForm, RegistrationForm, MessageForm
 from flask_login import current_user, login_user, login_required, logout_user
-from app.model import User
+from app.model import User, Message
 from werkzeug.urls import url_parse
 
 
 @app.route('/')
-@app.route('/index')
+@app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
-    return render_template('index.html', title='Home')
+    form = MessageForm()
+    users = User.query.all()
+    messages = Message.query.all()
+    if form.validate_on_submit():
+        message = Message(content=form.message.data, author=current_user)
+        db.session.add(message)
+        db.session.commit()
+        flash('Сообщение отправлено')
+        return redirect(url_for('index'))
+    return render_template("index.html", title='Home Page', form=form,
+                           messages=messages, users=users)
 
 
 @app.route('/register', methods=['GET', 'POST'])

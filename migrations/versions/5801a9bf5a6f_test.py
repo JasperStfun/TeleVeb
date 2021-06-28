@@ -1,8 +1,8 @@
-"""First
+"""test
 
-Revision ID: 535a91d0a826
+Revision ID: 5801a9bf5a6f
 Revises: 
-Create Date: 2021-06-17 13:22:29.526078
+Create Date: 2021-06-28 11:50:04.386879
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '535a91d0a826'
+revision = '5801a9bf5a6f'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -24,25 +24,28 @@ def upgrade():
     sa.Column('email', sa.String(length=120), nullable=False),
     sa.Column('password_hash', sa.String(length=28), nullable=True),
     sa.Column('role', sa.String(length=10), nullable=True),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email'),
-    sa.UniqueConstraint('username')
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_user')),
+    sa.UniqueConstraint('email', name=op.f('uq_user_email')),
+    sa.UniqueConstraint('username', name=op.f('uq_user_username'))
     )
     op.create_table('chat',
     sa.Column('chat_id', sa.Integer(), nullable=False),
     sa.Column('user_1_id', sa.Integer(), nullable=True),
     sa.Column('user_2_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['user_1_id'], ['user.id'], ),
-    sa.ForeignKeyConstraint(['user_2_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('chat_id')
+    sa.ForeignKeyConstraint(['user_1_id'], ['user.id'], name=op.f('fk_chat_user_1_id_user')),
+    sa.ForeignKeyConstraint(['user_2_id'], ['user.id'], name=op.f('fk_chat_user_2_id_user')),
+    sa.PrimaryKeyConstraint('chat_id', name=op.f('pk_chat'))
     )
     op.create_table('message',
     sa.Column('message_id', sa.Integer(), nullable=False),
     sa.Column('send_user_id', sa.Integer(), nullable=True),
+    sa.Column('send_user_name', sa.String(), nullable=True),
     sa.Column('content', sa.Text(), nullable=True),
     sa.Column('published', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['send_user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('message_id')
+    sa.ForeignKeyConstraint(['send_user_id'], ['user.id'], name=op.f('fk_message_send_user_id_user')),
+    sa.ForeignKeyConstraint(['send_user_name'], ['user.username'], name=op.f('fk_message_send_user_name_user')),
+    sa.PrimaryKeyConstraint('message_id', name=op.f('pk_message')),
+    sa.UniqueConstraint('content', name=op.f('uq_message_content'))
     )
     with op.batch_alter_table('message', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_message_published'), ['published'], unique=False)
@@ -50,8 +53,8 @@ def upgrade():
     op.create_table('user_picture',
     sa.Column('user_id_pic', sa.Integer(), nullable=False),
     sa.Column('pictures', sa.String(), nullable=True),
-    sa.ForeignKeyConstraint(['user_id_pic'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('user_id_pic')
+    sa.ForeignKeyConstraint(['user_id_pic'], ['user.id'], name=op.f('fk_user_picture_user_id_pic_user')),
+    sa.PrimaryKeyConstraint('user_id_pic', name=op.f('pk_user_picture'))
     )
     # ### end Alembic commands ###
 

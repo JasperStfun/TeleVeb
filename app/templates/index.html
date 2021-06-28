@@ -1,14 +1,28 @@
-<html>
-    <head>
-        {% if title %}
-        <title>{{ title }} - TeleVeb</title>
-        {% else %}
-        <title>Welcome to TeleVeb</title>
-        {% endif %}
-    </head>
-    <body>
-        {% block content %}
-            <h1>Hi, {{ current_user.username }}!</h1>
-        {% endblock %}
-    </body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="col-4">
+    <ul>
+      {% for user in users %}
+        {{ user }}<br>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="col-8">
+    <ul align="center">
+      {% for message in messages %}
+        {{ message }}<br>
+      {% endfor %}
+    </ul>
+    <form align="center" action="/index" method="post">
+      {{ form.hidden_tag() }}
+      <p>
+        {{ form.message.label }}
+        {{ form.message(size=64) }}
+        {{ form.submit }}
+      </p>
+  </form>
+  </div>
+</div>
+{% endblock %}
