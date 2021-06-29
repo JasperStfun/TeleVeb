@@ -14,7 +14,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(21), nullable=False, unique=True)
     email = db.Column(db.String(120), nullable=False, unique=True)
-    password_hash = db.Column(db.String(28))
+    password_hash = db.Column(db.String(300))
     role = db.Column(db.String(10))
     message = db.relationship('Message', backref='author', lazy='dynamic')
 
@@ -29,21 +29,26 @@ class User(UserMixin, db.Model):
 
 
 class Message(db.Model):
-    message_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     send_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    send_user_username = db.relationship('User', backref='user', lazy='select')
     content = db.Column(db.Text, nullable=True)
-    published = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    published = db.Column(db.DateTime, index=True, default=datetime.now())
+    message_chat_id = db.Column(db.Integer, db.ForeignKey('chat.id'))
+
+    def __repr__(self):
+        return f'<Message_id: {self.id} Chat_id: {self.message_chat_id} Username: {self.send_user_username} Content: {self.content}>'
 
 
 class UserPicture(db.Model):
-    user_id_pic = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
     pictures = db.Column(db.String)
 
 
 class Chat(db.Model):
-    chat_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     user_1_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user_2_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr__(self):
-        return f'<Chat: {self.chat_id} user_1_id: {self.user_1_id} user_2_id: {self.user_2_id}>'
+        return f'<Chat: {self.id} user_1_id: {self.user_1_id} user_2_id: {self.user_2_id}>'
