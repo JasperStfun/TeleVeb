@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Чат с {{ user_2.username }}</h1>
+    <h3>Чат с {{ user_2.username }}</h3>
     {% for message in all_messages %}
         {{ message.published.strftime('%d.%m.%Y %H:%M')}}<br>
         {{ message.send_user_username.username }}: {{ message.content }}<br>
-    {% endfor %}
+    {% endfor %}<br>
     <form action="" method="POST">
         {{ chat_form.hidden_tag() }}
         <p>
