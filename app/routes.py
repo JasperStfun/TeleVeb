@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from flask import render_template, flash, redirect, request, url_for
 from app import app, db
-from app.forms import ChatForm, LoginForm, RegistrationForm
+from app.forms import ChatForm, LoginForm, MyContactsForm, RegistrationForm
+from app.forms import SearchForm
 from flask_login import current_user, login_user, login_required, logout_user
 from app.model import Message, User, Chat
 from werkzeug.urls import url_parse
-import sqlalchemy
 
 
 @app.route('/')
@@ -57,37 +57,31 @@ def logout():
 @app.route('/welcome_to_chat/', methods=['GET', 'POST'])
 def welcome_to_chat():
     if current_user.is_authenticated:
+        search_form = SearchForm()
         users = User.query.filter(User.username != current_user.username).all()
-        return render_template('welcome_to_chat.html', users=users)
+        contacts_form = MyContactsForm()
+        return render_template('welcome_to_chat.html',
+                               users=users, search_form=search_form,
+                               contacts_form=contacts_form)
     flash('Login or register')
     return redirect(url_for('login'))
 
 
-@app.route('/welcome_to_chat/<pk>',
-           methods=['GET', 'POST'])
+@app.route('/welcome_to_chat/<pk>', methods=['GET', 'POST'])
 def chat(pk):
     if current_user.is_authenticated:
         user_1 = current_user
-        try:
-            user_2 = User.query.get(pk)
-        except sqlalchemy.exc.DataError:
-            flash('Choose current user to send message')
-            return redirect(url_for('welcome_to_chat'))
-        try:
-            chat_check_1 = Chat.query.filter(Chat.user_1_id == user_1.id,
-                                             Chat.user_2_id == user_2.id).first()
-            chat_check_2 = Chat.query.filter(Chat.user_1_id == user_2.id,
-                                             Chat.user_2_id == user_1.id).first()
-        except AttributeError:
-            flash('Choose current user to send message')
-            return redirect(url_for('welcome_to_chat'))
-        if chat_check_1 is None and chat_check_2 is None:
+        user_2 = User.query.filter(User.id == pk).first_or_404()
+        chat_check = Chat.query.filter(
+            (Chat.user_1_id == user_1.id) | (Chat.user_2_id == user_1.id)
+        ).filter(
+            (Chat.user_1_id == user_2.id) | (Chat.user_2_id == user_2.id)
+        ).first()
+        if chat_check is None:
             chat = create_chat(user_1, user_2)
             chat = chat.id
-        if chat_check_1 is not None:
-            chat = chat_check_1.id
-        if chat_check_2 is not None:
-            chat = chat_check_2.id
+        else:
+            chat = chat_check.id
         chat_form = ChatForm()
         if chat_form.validate_on_submit():
             content = chat_form.user_message.data
@@ -95,8 +89,9 @@ def chat(pk):
                               message_chat_id=chat)
             db.session.add(message)
             db.session.commit()
-            return redirect(f'{pk}')
-        all_messages = Message.query.filter(Message.message_chat_id == chat).all()
+            return redirect(url_for('chat', pk=pk))
+        all_messages = Message.query.filter
+        (Message.message_chat_id == chat).all()
         return render_template('chat.html', user_1=user_1, user_2=user_2,
                                chat_form=chat_form, all_messages=all_messages)
     flash('Login or register')
