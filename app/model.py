@@ -37,7 +37,9 @@ class Message(db.Model):
     message_chat_id = db.Column(db.Integer, db.ForeignKey('chat.id'))
 
     def __repr__(self):
-        return f'<Message_id: {self.id} Chat_id: {self.message_chat_id} Username: {self.send_user_username} Content: {self.content}>'
+        return (f'<Message_id: {self.id} Chat_id: {self.message_chat_id}'
+                f' Username: {self.send_user_username}'
+                f' Content: {self.content}>')
 
 
 class UserPicture(db.Model):
@@ -46,9 +48,11 @@ class UserPicture(db.Model):
 
 
 class Chat(db.Model):
+    __table_args__ = (db.UniqueConstraint('user_1_id', 'user_2_id'), )
     id = db.Column(db.Integer, primary_key=True)
     user_1_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user_2_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr__(self):
-        return f'<Chat: {self.id} user_1_id: {self.user_1_id} user_2_id: {self.user_2_id}>'
+        return (f'<Chat: {self.id} user_1_id: '
+                f'{self.user_1_id} user_2_id: {self.user_2_id}>')
