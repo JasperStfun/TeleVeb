@@ -59,10 +59,8 @@ def welcome_to_chat():
     if current_user.is_authenticated:
         search_form = SearchForm()
         users = User.query.filter(User.username != current_user.username).all()
-        contacts_form = MyContactsForm()
         return render_template('welcome_to_chat.html',
-                               users=users, search_form=search_form,
-                               contacts_form=contacts_form)
+                               users=users, search_form=search_form)
     flash('Login or register')
     return redirect(url_for('login'))
 
