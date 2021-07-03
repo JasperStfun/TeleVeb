@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-xl">
+            <h5>Добро пожаловать в чат {{ current_user.username }}!</h5>
+        </div>
+        <div class="col-xl">
+            <h5>Choose the user:</h5>
+            <div class="list-group">
+                {% for user in users %}
+                    <a href="{{ user.id }}" class="list-group-item list-group-item-action" aria-current="true">{{ user.username }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-xl">
+            <form action="" method="POST">
+                {{ search_form.hidden_tag() }}
+                <div class="form-group">
+                    {{ search_form.search.label}}<br>
+                    {{ search_form.search() }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

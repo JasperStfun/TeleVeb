@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h3>Чат с {{ user_2.username }}</h3>
+    {% for message in all_messages %}
+        {{ message.published.strftime('%d.%m.%Y %H:%M')}}<br>
+        {{ message.send_user_username.username }}: {{ message.content }}<br>
+    {% endfor %}<br>
+    <form action="" method="POST">
+        {{ chat_form.hidden_tag() }}
+        <p>
+            {{ chat_form.user_message.label }}<br> 
+            {{ chat_form.user_message(rows='10',cols='100') }} {{ chat_form.submit() }}
+        </p>
+    </form>
+{% endblock %}
