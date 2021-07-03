@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import render_template, flash, redirect, request, url_for
 from app import app, db
-from app.forms import ChatForm, LoginForm, MyContactsForm, RegistrationForm
+from app.forms import ChatForm, LoginForm, RegistrationForm
 from app.forms import SearchForm
 from flask_login import current_user, login_user, login_required, logout_user
 from app.model import Message, User, Chat
