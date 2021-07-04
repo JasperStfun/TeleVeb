@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from re import search
 from flask import render_template, flash, redirect, request, url_for
 from app import app, db
 from app.forms import ChatForm, LoginForm, RegistrationForm
@@ -57,10 +58,22 @@ def logout():
 @app.route('/welcome_to_chat/', methods=['GET', 'POST'])
 def welcome_to_chat():
     if current_user.is_authenticated:
-        search_form = SearchForm()
         users = User.query.filter(User.username != current_user.username).all()
-        return render_template('welcome_to_chat.html',
-                               users=users, search_form=search_form)
+        search_form = SearchForm()
+        if search_form.validate_on_submit():
+            content = search_form.search.data
+            search_result = User.query.filter(User.username == content).first()
+            if search_result is not None:
+                search_result = search_result.username
+                return render_template('welcome_to_chat.html',users=users, search_form=search_form,
+                                    search_result=search_result)
+            else:
+                flash('User not found')
+                return render_template('welcome_to_chat.html',
+                                   users=users, search_form=search_form)
+        else:
+            return render_template('welcome_to_chat.html',
+                                   users=users, search_form=search_form)
     flash('Login or register')
     return redirect(url_for('login'))
 
@@ -88,8 +101,7 @@ def chat(pk):
             db.session.add(message)
             db.session.commit()
             return redirect(url_for('chat', pk=pk))
-        all_messages = Message.query.filter
-        (Message.message_chat_id == chat).all()
+        all_messages = Message.query.filter(Message.message_chat_id == chat).all()
         return render_template('chat.html', user_1=user_1, user_2=user_2,
                                chat_form=chat_form, all_messages=all_messages)
     flash('Login or register')
