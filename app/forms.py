@@ -53,3 +53,5 @@ class ChatForm(FlaskForm):
 class SearchForm(FlaskForm):
     search = SearchField('Search', validators=[DataRequired()],
                          render_kw={"class": "form-control"})
+    submit = SubmitField('Search',
+                         render_kw={"class": "btn btn-outline-primary"})
