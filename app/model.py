@@ -56,3 +56,8 @@ class Chat(db.Model):
     def __repr__(self):
         return (f'<Chat: {self.id} user_1_id: '
                 f'{self.user_1_id} user_2_id: {self.user_2_id}>')
+
+
+class UserArchive(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(21), nullable=False, unique=True)
