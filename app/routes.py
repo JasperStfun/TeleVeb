@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
-from re import search
 from flask import render_template, flash, redirect, request, url_for
-from app import app, db
+from flask_login import current_user, login_user, login_required, logout_user
+from werkzeug.urls import url_parse
+from flask_socketio import emit
+
+
+from app import app, db, socketio
 from app.forms import ChatForm, LoginForm, RegistrationForm
 from app.forms import SearchForm
-from flask_login import current_user, login_user, login_required, logout_user
 from app.model import Message, User, Chat
-from werkzeug.urls import url_parse
+
 
 
 @app.route('/')
@@ -14,6 +17,13 @@ from werkzeug.urls import url_parse
 @login_required
 def index():
     return render_template('index.html', title='Home')
+
+
+@socketio.on('my_event')
+def handle_message(message):
+    print(f'Message: {message}')
+    message = message.upper()
+    emit('no event', message, broadcast=True)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -58,22 +68,10 @@ def logout():
 @app.route('/welcome_to_chat/', methods=['GET', 'POST'])
 def welcome_to_chat():
     if current_user.is_authenticated:
-        users = User.query.filter(User.username != current_user.username).all()
         search_form = SearchForm()
-        if search_form.validate_on_submit():
-            content = search_form.search.data
-            search_result = User.query.filter(User.username == content).first()
-            if search_result is not None:
-                search_result = search_result.username
-                return render_template('welcome_to_chat.html',users=users, search_form=search_form,
-                                    search_result=search_result)
-            else:
-                flash('User not found')
-                return render_template('welcome_to_chat.html',
-                                   users=users, search_form=search_form)
-        else:
-            return render_template('welcome_to_chat.html',
-                                   users=users, search_form=search_form)
+        users = User.query.filter(User.username != current_user.username).all()
+        return render_template('welcome_to_chat.html',
+                               users=users, search_form=search_form)
     flash('Login or register')
     return redirect(url_for('login'))
 
