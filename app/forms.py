@@ -1,10 +1,12 @@
+from flask.app import Flask
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, PasswordField, StringField, SubmitField
 from wtforms.fields.simple import TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, Required
 from wtforms.validators import ValidationError, Length
-from app.model import User
+from app.model import User, UserArchive
 from wtforms.fields.html5 import EmailField, SearchField
+from flask_login import current_user
 
 
 class LoginForm(FlaskForm):
@@ -80,3 +82,30 @@ class ProfileForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
             raise ValidationError('Please use a different email adress.')
+
+
+class UsernameEditForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()],
+                           render_kw={"class": "form-control"})
+    submit = SubmitField('Change',
+                         render_kw={"class": "btn btn-outline-primary"})
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        user_archive = UserArchive.query.filter_by(username=username.data).first()
+        if user == current_user:
+            raise ValidationError('The username is the same as the current one')
+        if user is not None or user_archive is not None:
+            raise ValidationError('Please use a different username.')
+
+
+class EmailEditForm(FlaskForm):
+    email = EmailField('Email', validators=[DataRequired(), Email()],
+                       render_kw={"class": "form-control"})
+    submit = SubmitField('Change',
+                         render_kw={"class": "btn btn-outline-primary"})
+
+    def validate_email(self, email):
+            user = User.query.filter_by(email=email.data).first()
+            if user is not None:
+                raise ValidationError('Please use a different email adress.')
