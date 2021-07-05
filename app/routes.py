@@ -1,29 +1,18 @@
 # -*- coding: utf-8 -*-
 from flask import render_template, flash, redirect, request, url_for
-from flask_login import current_user, login_user, login_required, logout_user
-from werkzeug.urls import url_parse
-from flask_socketio import emit
-
-
-from app import app, db, socketio
-from app.forms import ChatForm, LoginForm, RegistrationForm
+from app import app, db
+from app.forms import ChatForm, LoginForm, ProfileForm, RegistrationForm
 from app.forms import SearchForm
+from flask_login import current_user, login_user, login_required, logout_user
 from app.model import Message, User, Chat
-
+from werkzeug.urls import url_parse
 
 
 @app.route('/')
 @app.route('/index')
 @login_required
 def index():
-    return render_template('index.html', title='Home')
-
-
-@socketio.on('my_event')
-def handle_message(message):
-    print(f'Message: {message}')
-    message = message.upper()
-    emit('no event', message, broadcast=True)
+    return render_template('index.html', title='Home', current_user=current_user)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -68,10 +57,22 @@ def logout():
 @app.route('/welcome_to_chat/', methods=['GET', 'POST'])
 def welcome_to_chat():
     if current_user.is_authenticated:
-        search_form = SearchForm()
         users = User.query.filter(User.username != current_user.username).all()
-        return render_template('welcome_to_chat.html',
-                               users=users, search_form=search_form)
+        search_form = SearchForm()
+        if search_form.validate_on_submit():
+            content = search_form.search.data
+            search_result = User.query.filter(User.username == content).first()
+            if search_result is not None:
+                search_result = search_result.username
+                return render_template('welcome_to_chat.html',users=users, search_form=search_form,
+                                    search_result=search_result)
+            else:
+                flash('User not found')
+                return render_template('welcome_to_chat.html',
+                                   users=users, search_form=search_form)
+        else:
+            return render_template('welcome_to_chat.html',
+                                   users=users, search_form=search_form)
     flash('Login or register')
     return redirect(url_for('login'))
 
@@ -111,3 +112,54 @@ def create_chat(user_1, user_2):
     db.session.add(chat)
     db.session.commit()
     return chat
+
+
+@app.route('/profile/<pk>', methods=['GET', 'POST'])
+def user_profile(pk):
+    if current_user.is_authenticated:
+        profile_form = ProfileForm()
+        profile_form.username.data = current_user.username
+        profile_form.email.data = current_user.email
+        # if profile_username_form.validate_on_submit():
+        #     print('username')
+        #     user_name = User(username=profile_username_form.data)
+        #     db.session.add(user_name)
+        #     db.session.commit()
+        #     flash('Nice')
+        #     return redirect(url_for('user_profile', pk=pk))
+        # if profile_email_form.validate_on_submit():
+        #     print('email')
+        #     user_email=User(email=profile_email_form.data)
+        #     db.session.add(user_email)
+        #     db.session.commit()
+        #     flash('Nice')
+        #     return redirect(url_for('user_profile', pk=pk))
+        # if profile_password_form.validate_on_submit():
+        #     print('password')
+        #     user_passsword = User(password_hash=profile_password_form.data)
+        #     db.session.add(user_passsword)
+        #     db.session.commit()
+        #     flash('Nice')
+        #     return redirect(url_for('user_profile', pk=pk))
+        return render_template('user_profile.html',
+                               current_user=current_user, profile_form=profile_form)
+    flash('Login or register')
+    return redirect(url_for('login'))
+
+@app.route('/edit_profile/<pk>', methods=['GET', 'POST'])
+def edit_profile(pk):
+    if current_user.is_authenticated:
+        profile_form = ProfileForm()
+        if profile_form.validate_on_submit():
+            user = User.query.filter(User.id==current_user.id).first()
+            user.username = profile_form.username.data
+            db.session.commit()
+            flash('Nice')
+            return redirect(url_for('user_profile', pk=pk))
+        else:
+            profile_form.username.data = current_user.username
+            profile_form.email.data = current_user.email
+        return render_template('edit_profile.html',
+                               current_user=current_user, profile_form=profile_form)
+    flash('Login or register')
+    return redirect(url_for('login'))
