@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from flask import render_template, flash, redirect, request, url_for
 from app import app, db
-from app.forms import ChatForm, LoginForm, ProfileForm, RegistrationForm
+from app.forms import ChatForm, EmailEditForm, LoginForm, ProfileForm, RegistrationForm, UsernameEditForm
 from app.forms import SearchForm
 from flask_login import current_user, login_user, login_required, logout_user
-from app.model import Message, User, Chat
+from app.model import Message, User, Chat, UserArchive
 from werkzeug.urls import url_parse
 
 
@@ -22,8 +22,10 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data)
+        user_archive = UserArchive(username=form.username.data)
         user.set_password(form.password.data)
         db.session.add(user)
+        db.session.add(user_archive)
         db.session.commit()
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('login'))
@@ -120,27 +122,6 @@ def user_profile(pk):
         profile_form = ProfileForm()
         profile_form.username.data = current_user.username
         profile_form.email.data = current_user.email
-        # if profile_username_form.validate_on_submit():
-        #     print('username')
-        #     user_name = User(username=profile_username_form.data)
-        #     db.session.add(user_name)
-        #     db.session.commit()
-        #     flash('Nice')
-        #     return redirect(url_for('user_profile', pk=pk))
-        # if profile_email_form.validate_on_submit():
-        #     print('email')
-        #     user_email=User(email=profile_email_form.data)
-        #     db.session.add(user_email)
-        #     db.session.commit()
-        #     flash('Nice')
-        #     return redirect(url_for('user_profile', pk=pk))
-        # if profile_password_form.validate_on_submit():
-        #     print('password')
-        #     user_passsword = User(password_hash=profile_password_form.data)
-        #     db.session.add(user_passsword)
-        #     db.session.commit()
-        #     flash('Nice')
-        #     return redirect(url_for('user_profile', pk=pk))
         return render_template('user_profile.html',
                                current_user=current_user, profile_form=profile_form)
     flash('Login or register')
@@ -149,17 +130,33 @@ def user_profile(pk):
 @app.route('/edit_profile/<pk>', methods=['GET', 'POST'])
 def edit_profile(pk):
     if current_user.is_authenticated:
-        profile_form = ProfileForm()
-        if profile_form.validate_on_submit():
-            user = User.query.filter(User.id==current_user.id).first()
-            user.username = profile_form.username.data
-            db.session.commit()
-            flash('Nice')
-            return redirect(url_for('user_profile', pk=pk))
+        username_edit_form = UsernameEditForm()
+        email_edit_form= EmailEditForm()
+        if username_edit_form.validate_on_submit():
+            edit_username(current_user, username_edit_form, pk)
+        if email_edit_form.validate_on_submit():
+            edit_email(current_user, email_edit_form, pk)
         else:
-            profile_form.username.data = current_user.username
-            profile_form.email.data = current_user.email
+            username_edit_form.username.data = current_user.username
+            email_edit_form.email.data = current_user.email
         return render_template('edit_profile.html',
-                               current_user=current_user, profile_form=profile_form)
+                               current_user=current_user, username_edit_form=username_edit_form,
+                               email_edit_form=email_edit_form)
     flash('Login or register')
     return redirect(url_for('login'))
+
+def edit_username(current_user, username_edit_form, pk):
+    user = User.query.filter(User.id==current_user.id).first()
+    user_archive = UserArchive(username=username_edit_form.username.data)
+    user.username = username_edit_form.username.data
+    db.session.add(user_archive)
+    db.session.commit()
+    flash('You have successfully changed your username!')
+    return redirect(url_for('edit_profile', pk=pk))
+
+def edit_email(current_user, email_edit_form, pk):
+    user = User.query.filter(User.id==current_user.id).first()
+    user.email = email_edit_form.email.data
+    db.session.commit()
+    flash('You have successfully changed your email!')
+    return redirect(url_for('edit_profile', pk=pk))
