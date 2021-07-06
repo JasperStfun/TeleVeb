@@ -1,16 +1,42 @@
 {% extends "base.html" %}
 
+{% block head %}
+    {{ super() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+{% endblock %}
+
 {% block content %}
     <h3>Чат с {{ user_2.username }}</h3>
-    {% for message in all_messages %}
-        {{ message.published.strftime('%d.%m.%Y %H:%M')}}<br>
-        {{ message.send_user_username.username }}: {{ message.content }}<br>
-    {% endfor %}<br>
-    <form action="" method="POST">
+    <div class="messages">
+        {% for message in all_messages %}
+            {{ message.published.strftime('%d.%m.%Y %H:%M')}}<br>
+            {{ message.send_user_username.username }}: {{ message.content }}<br>
+        {% endfor %}<br>
         {{ chat_form.hidden_tag() }}
         <p>
             {{ chat_form.user_message.label }}<br> 
-            {{ chat_form.user_message(rows='10',cols='100') }} {{ chat_form.submit() }}
+            {{ chat_form.user_message(rows='10',cols='100') }}
+            <button id="sendbutton" class="btn btn-outline-primary">Send</button>
         </p>
-    </form>
+    </div>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                var socket = io.connect('http://127.0.0.1:5000');
+    
+                socket.on('connect', function() {
+                    socket.emit('join', {{ chat }});
+                });
+    
+                socket.on('display message', function(msg) {
+                    $(".messages").append(msg+'</li>');
+                    console.log('Received message');
+                });
+    
+                $('#sendbutton').on('click', function() {
+                    socket.emit('send message', $('#user_message').val(), {{ chat }});
+                    $('#user_message').val('');
+                });
+            });
+        </script>
 {% endblock %}

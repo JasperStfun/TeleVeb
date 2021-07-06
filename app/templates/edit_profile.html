@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>Edit my profile</h1>
+    <div class="row">
+        <div class="col-xl-3">
+            <form action="" method="POST">
+                {{ username_edit_form.hidden_tag() }}
+                <div class="form-group">
+                    {{ username_edit_form.username.label }}<br>
+                    {{ username_edit_form.username(size=32) }}<br>
+                    {% for error in username_edit_form.username.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {{ username_edit_form.submit }}       
+            </form>
+            <form action="" method="POST">
+                {{ email_edit_form.hidden_tag() }}
+                <div class="form-group">
+                    {{ email_edit_form.email.label }}<br>
+                    {{ email_edit_form.email(size=32) }}<br>
+                    {% for error in email_edit_form.email.errors %}
+                    <span style="color: red;">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {{ email_edit_form.submit }}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
