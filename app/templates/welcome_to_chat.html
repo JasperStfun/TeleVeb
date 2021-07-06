@@ -20,6 +20,8 @@
                 <div class="form-group">
                     {{ search_form.search.label}}<br>
                     {{ search_form.search() }}
+                    {{ search_form.submit() }}<br>
+                    <h6>{{ search_result }}</h6>
                 </div>
             </form>
         </div>
