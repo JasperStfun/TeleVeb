@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 from flask import render_template, flash, redirect, request, url_for
-from app import app, db
+from app import app, db, socketio
 from app.forms import ChatForm, EmailEditForm, LoginForm, ProfileForm, RegistrationForm, UsernameEditForm
 from app.forms import SearchForm
 from flask_login import current_user, login_user, login_required, logout_user
 from app.model import Message, User, Chat, UserArchive
 from werkzeug.urls import url_parse
+from flask_socketio import emit, join_room
 
 
 @app.route('/')
@@ -103,7 +104,7 @@ def chat(pk):
             db.session.commit()
             return redirect(url_for('chat', pk=pk))
         all_messages = Message.query.filter(Message.message_chat_id == chat).all()
-        return render_template('chat.html', user_1=user_1, user_2=user_2,
+        return render_template('chat.html', user_1=user_1, user_2=user_2, chat=chat,
                                chat_form=chat_form, all_messages=all_messages)
     flash('Login or register')
     return redirect(url_for('login'))
@@ -114,6 +115,18 @@ def create_chat(user_1, user_2):
     db.session.add(chat)
     db.session.commit()
     return chat
+
+@socketio.on('send message')
+def handle_message(message, chat):
+    chat_check = Chat.query.filter(Chat.id == chat).first_or_404()
+    emit('display message', message, room=str(chat_check.id))
+
+
+@socketio.on('join')
+def join(chat):
+    chat_check = Chat.query.filter(Chat.id == chat).first_or_404()
+    join_room(str(chat_check.id))
+
 
 
 @app.route('/profile/<pk>', methods=['GET', 'POST'])
