@@ -13,7 +13,7 @@ class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()],
                            render_kw={"class": "form-control"})
     password = PasswordField('Password', validators=[DataRequired(),
-                             Length(min=4, max=16)],
+                                                     Length(min=4, max=16)],
                              render_kw={"class": "form-control"})
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Sign In',
@@ -26,7 +26,7 @@ class RegistrationForm(FlaskForm):
     email = EmailField('Email', validators=[DataRequired(), Email()],
                        render_kw={"class": "form-control"})
     password = PasswordField('Password', validators=[DataRequired(),
-                             Length(min=4, max=16)],
+                                                     Length(min=4, max=16)],
                              render_kw={"class": "form-control"})
     password_2 = PasswordField(
         'Repeat password', validators=[DataRequired(), EqualTo('password')],
@@ -65,7 +65,7 @@ class ProfileForm(FlaskForm):
     email = EmailField('Email', validators=[DataRequired(), Email()],
                        render_kw={"class": "form-control"})
     password = PasswordField('Password', validators=[DataRequired(),
-                             Length(min=4, max=16)],
+                                                     Length(min=4, max=16)],
                              render_kw={"class": "form-control"})
     password_2 = PasswordField(
         'Repeat password', validators=[DataRequired(), EqualTo('password')],
@@ -106,6 +106,6 @@ class EmailEditForm(FlaskForm):
                          render_kw={"class": "btn btn-outline-primary"})
 
     def validate_email(self, email):
-            user = User.query.filter_by(email=email.data).first()
-            if user is not None:
-                raise ValidationError('Please use a different email adress.')
+        user = User.query.filter_by(email=email.data).first()
+        if user is not None:
+            raise ValidationError('Please use a different email adress.')
