@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from enum import unique
 from flask import render_template, flash, redirect, request, url_for
 from app import app, db, socketio
 from app.forms import ChatForm, EmailEditForm, LoginForm, ProfileForm, RegistrationForm, UsernameEditForm
@@ -118,8 +119,14 @@ def create_chat(user_1, user_2):
 
 @socketio.on('send message')
 def handle_message(message, chat):
-    chat_check = Chat.query.filter(Chat.id == chat).first_or_404()
-    emit('display message', message, room=str(chat_check.id))
+    if current_user.is_authenticated:
+       chat_check = Chat.query.filter(Chat.id == chat).first_or_404()
+       message = str(message); chat = str(chat)  
+       send_user = int(current_user.id)
+       content = Message(content=message, message_chat_id=chat, send_user_id=send_user)
+       db.session.add(content)
+       db.session.commit()
+       emit('display message', message, room=str(chat_check.id))
 
 
 @socketio.on('join')
