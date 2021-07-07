@@ -132,3 +132,4 @@ config.py
 .vscode
 app.db
 migrations/
+run.bat
