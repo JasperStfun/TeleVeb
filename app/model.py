@@ -49,9 +49,9 @@ class UserPicture(db.Model):
 
 
 class Chat(db.Model):
-    __table_args__ = (db.UniqueConstraint('user_1_id', 'user_2_id'), )
+    __table_args__ = (db.UniqueConstraint('user_1_id', 'user_2_id'),)
     id = db.Column(db.Integer, primary_key=True)
-    unique_number = db.Column(db.String, nullable=True)
+    unique_number = db.Column(db.String, nullable=False, unique=True)
     user_1_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user_2_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
