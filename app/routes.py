@@ -93,7 +93,7 @@ def chat(pk):
             (Chat.user_1_id == user_2.id) | (Chat.user_2_id == user_2.id)
         ).first()
         if chat_existence is None:
-            chat = create_chat(user_1, user_2, uuid.uuid4())
+            chat = create_chat(user_1, user_2)
             chat_id = chat.id
         else:
             chat_id = chat_existence.id
@@ -105,8 +105,9 @@ def chat(pk):
     return redirect(url_for('login'))
 
 
-def create_chat(user_1, user_2, uuid):
-    chat = Chat(user_1_id=user_1.id, user_2_id=user_2.id, unique_number=uuid)
+def create_chat(user_1, user_2):
+    unique_number =  uuid.uuid4()
+    chat = Chat(user_1_id=user_1.id, user_2_id=user_2.id, unique_number=unique_number)
     db.session.add(chat)
     db.session.commit()
     return chat
@@ -117,12 +118,13 @@ def handle_message(message, chat_id):
     if current_user.is_authenticated:
         chat_existence = Chat.query.filter(Chat.id == chat_id).first_or_404()
         message = str(message)
-        dt_now = datetime.now().strftime('%d.%m.%Y %H:%M')
         send_user = current_user.id
+        dt_now = datetime.now().strftime('%m.%d.%Y %H:%M:%S')
         content = Message(content=message, message_chat_id=chat_id,
                           send_user_id=send_user, published=dt_now)
         db.session.add(content)
         db.session.commit()
+        dt_now = datetime.now().strftime('%d.%m.%Y %H:%M')
         message_info = f'{dt_now} {current_user.username}: {message}'
         emit('display message', message_info, room=chat_existence.unique_number)
 
