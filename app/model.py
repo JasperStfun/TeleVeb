@@ -11,19 +11,41 @@ def load_user(id):
     return User.query.get(int(id))
 
 
+friends = db.Table('friends',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('friend_id', db.Integer, db.ForeignKey('user.id'))
+)
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(21), nullable=False, unique=True)
     email = db.Column(db.String(120), nullable=False, unique=True)
     password_hash = db.Column(db.String(300))
-    role = db.Column(db.String(10))
+    role = db.Column(db.String(10), default='user')
     message = db.relationship('Message', backref='author', lazy='dynamic')
+    friendlist = db.relationship('User', secondary=friends,
+        primaryjoin=(friends.c.user_id == id),
+        secondaryjoin=(friends.c.friend_id == id),
+        backref=db.backref('friends', lazy='dynamic'), lazy='dynamic')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def add_friend(self, user):
+        if not self.is_friend(user):
+            self.friendlist(user)
+
+    def del_friend(self, user):
+        if self.is_friend(user):
+            self.friendlist(user)
+    
+    def is_friend(self, user):
+        return self.friendlist.filter(
+            friends.c.friend_id == user.id).count() > 0
 
     def __repr__(self):
         return f'<User: {self.username} id: {self.id}>'
@@ -63,3 +85,4 @@ class Chat(db.Model):
 class UserArchive(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(21), nullable=False, unique=True)
+

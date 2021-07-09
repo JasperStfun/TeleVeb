@@ -13,6 +13,17 @@
                 {{ profile_form.email.label }}<br>
                 {{ profile_form.email(readonly=true) }}<br>           
             </div>
+            <h1>User: {{ user.username }}</h1>
+            <div>
+                <p>{{ user.friends.count() }} friends, {{ user.friendlist.count() }} friend.</p>
+                {% if user == current_user %}
+                <p><a href=" {{ url_for('edit_profile', pk=current_user.id) }}">Edit your profile</a></p>
+                {% elif not current_user.is_friend(user) %}
+                <p><a href="{{ url_for('add_friend', username=user.username) }}">Add friend</a></p>
+                {% else %}
+                <p><a href="{{ url_for('del_friend', username=user.username) }}">Delete friend</a></p>
+                {% endif %}
+            </div>
             <a href="{{ url_for('edit_profile', pk=current_user.id) }}" class="btn btn-outline-primary" role="button" aria-pressed="true">Edit</a>
         </div>
     </div>

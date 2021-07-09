@@ -18,6 +18,38 @@ def index():
     return render_template('index.html', title='Home', current_user=current_user)
 
 
+@app.route('/friends/<username>')
+@login_required
+def add_friend(username):
+    user = User.query.filter_by(username=username).first()
+    if User is None:
+        flash(f'User {username} not found.')
+        return redirect(url_for('profile', username=username))
+    if user == current_user:
+        flash('You cannot friendship with yourself!')
+        return redirect(url_for('profile', username=username))
+    current_user.add_friend(user)
+    db.session.commit()
+    flash(f'Now you are friends with {username}')
+    return redirect(url_for('profile', username=username))
+
+
+@app.route('/remove_friend/<username>')
+@login_required
+def del_friend(username):
+    user = User.query.filter_by(username=username).first()
+    if User is None:
+        flash(f'User {username} not found.')
+        return redirect(url_for('profile', username=username))
+    if user == current_user:
+        flash('You cannot delete yourself!')
+        return redirect(url_for('profile', username=username))
+    current_user.del_friend(user)
+    db.session.commit()
+    flash(f'{username} not your friend anymore')
+    return redirect(url_for('profile', username=username))
+
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
@@ -93,7 +125,7 @@ def chat(pk):
             (Chat.user_1_id == user_2.id) | (Chat.user_2_id == user_2.id)
         ).first()
         if chat_existence is None:
-            chat = create_chat(user_1, user_2, uuid.uuid4())
+            chat = create_chat(user_1, user_2,)
             chat_id = chat.id
         else:
             chat_id = chat_existence.id
@@ -105,8 +137,9 @@ def chat(pk):
     return redirect(url_for('login'))
 
 
-def create_chat(user_1, user_2, uuid):
-    chat = Chat(user_1_id=user_1.id, user_2_id=user_2.id, unique_number=uuid)
+def create_chat(user_1, user_2):
+    unique_uuid = uuid.uuid4()
+    chat = Chat(user_1_id=user_1.id, user_2_id=user_2.id, unique_number=str(unique_uuid))
     db.session.add(chat)
     db.session.commit()
     return chat
@@ -137,13 +170,21 @@ def join(chat_id):
 @app.route('/profile/<pk>', methods=['GET', 'POST'])
 def user_profile(pk):
     if current_user.is_authenticated:
+        user = User.query.filter(User.id == pk)
         profile_form = ProfileForm()
         profile_form.username.data = current_user.username
         profile_form.email.data = current_user.email
         return render_template('user_profile.html',
-                               current_user=current_user, profile_form=profile_form)
+                               current_user=current_user, profile_form=profile_form, user=user)
     flash('Login or register')
     return redirect(url_for('login'))
+
+
+#@app.route('/user/<username>')
+#@login_required
+#def user(username):
+    #user = User.query.filter_by(username=username).first_or_404()
+    #return render_template('user.html', user=user)
 
 
 @app.route('/edit_profile/<pk>', methods=['GET', 'POST'])
