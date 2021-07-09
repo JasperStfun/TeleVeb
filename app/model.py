@@ -18,7 +18,9 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(300))
     role = db.Column(db.String(10))
     message = db.relationship('Message', backref='author', lazy='dynamic')
+    avatar = db.Column(db.String(150),  unique=True)
 
+    
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -41,11 +43,6 @@ class Message(db.Model):
         return (f'<Message_id: {self.id} Chat_id: {self.message_chat_id}'
                 f' Username: {self.send_user_username}'
                 f' Content: {self.content}>')
-
-
-class UserPicture(db.Model):
-    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    pictures = db.Column(db.String)
 
 
 class Chat(db.Model):
