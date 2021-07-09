@@ -9,13 +9,16 @@ from app.model import Message, User, Chat, UserArchive
 from werkzeug.urls import url_parse
 from flask_socketio import emit, join_room
 from datetime import datetime
-
+from werkzeug.utils import secure_filename
+import os
 
 @app.route('/')
 @app.route('/index')
 @login_required
 def index():
-    return render_template('index.html', title='Home', current_user=current_user)
+    user = User.query.filter(User.id == current_user.id).first()
+    avatar = user.avatar
+    return render_template('index.html', title='Home', current_user=current_user, avatar=avatar)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -24,7 +27,10 @@ def register():
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(username=form.username.data, email=form.email.data)
+        file = form.avatar.data
+        filename = secure_filename(file.filename)
+        file.save(os.path.join('app/static/', 'avatars/', filename))
+        user = User(username=form.username.data, email=form.email.data, avatar=f'/static/avatars/{filename}')
         user_archive = UserArchive(username=form.username.data)
         user.set_password(form.password.data)
         db.session.add(user)
@@ -33,7 +39,6 @@ def register():
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('login'))
     return render_template('register.html', title='Регистрация', form=form)
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
