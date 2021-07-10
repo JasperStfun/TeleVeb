@@ -26,7 +26,7 @@ class RegistrationForm(FlaskForm):
     email = EmailField('Email', validators=[DataRequired(), Email()],
                        render_kw={"class": "form-control"})
     password = PasswordField('Password', validators=[DataRequired(),
-                                                     Length(min=4, max=16)],
+                             Length(min=4, max=16)],
                              render_kw={"class": "form-control"})
     password_2 = PasswordField(
         'Repeat password', validators=[DataRequired(), EqualTo('password')],
