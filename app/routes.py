@@ -28,7 +28,7 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         file = form.avatar.data
-        filename = secure_filename(file.filename)
+        filename = str(uuid.uuid4()) + secure_filename(file.filename)
         file.save(os.path.join('app/static/', 'avatars/', filename))
         user = User(username=form.username.data, email=form.email.data, avatar=f'/static/avatars/{filename}')
         user_archive = UserArchive(username=form.username.data)
@@ -39,6 +39,7 @@ def register():
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('login'))
     return render_template('register.html', title='Регистрация', form=form)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
