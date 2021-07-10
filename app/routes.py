@@ -87,16 +87,16 @@ def chat(pk):
     if current_user.is_authenticated:
         user_1 = current_user
         user_2 = User.query.filter(User.id == pk).first_or_404()
-        chat_existence = Chat.query.filter(
+        chat = Chat.query.filter(
             (Chat.user_1_id == user_1.id) | (Chat.user_2_id == user_1.id)
         ).filter(
             (Chat.user_1_id == user_2.id) | (Chat.user_2_id == user_2.id)
         ).first()
-        if chat_existence is None:
+        if chat is None:
             chat = create_chat(user_1, user_2)
             chat_id = chat.id
         else:
-            chat_id = chat_existence.id
+            chat_id = chat.id
         chat_form = ChatForm()
         all_messages = Message.query.filter(Message.message_chat_id == chat_id).all()
         return render_template('chat.html', user_1=user_1, user_2=user_2, chat_id=chat_id,
@@ -116,7 +116,7 @@ def create_chat(user_1, user_2):
 @socketio.on('send message')
 def handle_message(message, chat_id):
     if current_user.is_authenticated:
-        chat_existence = Chat.query.filter(Chat.id == chat_id).first_or_404()
+        chat = Chat.query.filter(Chat.id == chat_id).first_or_404()
         message = str(message)
         send_user = current_user.id
         dt_now = datetime.now().strftime('%m.%d.%Y %H:%M:%S')
@@ -126,13 +126,13 @@ def handle_message(message, chat_id):
         db.session.commit()
         dt_now = datetime.now().strftime('%d.%m.%Y %H:%M')
         message_info = f'{dt_now} {current_user.username}: {message}'
-        emit('display message', message_info, room=chat_existence.unique_number)
+        emit('display message', message_info, room=chat.unique_number)
 
 
 @socketio.on('join')
 def join(chat_id):
-    chat_existence = Chat.query.filter(Chat.id == chat_id).first_or_404()
-    room = chat_existence.unique_number
+    chat = Chat.query.filter(Chat.id == chat_id).first_or_404()
+    room = chat.unique_number
     join_room(room)
 
 
