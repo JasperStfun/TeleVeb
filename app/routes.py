@@ -106,7 +106,10 @@ def chat(pk):
 
 
 def create_chat(user_1, user_2):
-    unique_number =  uuid.uuid4()
+    is_uniq_number_exists = True
+    while is_uniq_number_exists:
+        unique_number =  str(uuid.uuid4())
+        is_uniq_number_exists = Chat.query.filter(Chat.unique_number == unique_number).first()
     chat = Chat(user_1_id=user_1.id, user_2_id=user_2.id, unique_number=unique_number)
     db.session.add(chat)
     db.session.commit()
@@ -117,7 +120,6 @@ def create_chat(user_1, user_2):
 def handle_message(message, chat_id):
     if current_user.is_authenticated:
         chat = Chat.query.filter(Chat.id == chat_id).first_or_404()
-        message = str(message)
         send_user = current_user.id
         dt_now = datetime.now().strftime('%m.%d.%Y %H:%M:%S')
         content = Message(content=message, message_chat_id=chat_id,
