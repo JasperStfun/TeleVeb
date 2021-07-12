@@ -133,3 +133,4 @@ config.py
 app.db
 migrations/
 run.bat
+static/
