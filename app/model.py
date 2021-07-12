@@ -17,7 +17,6 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), nullable=False, unique=True)
     password_hash = db.Column(db.String(300))
     role = db.Column(db.String(10))
-    message = db.relationship('Message', backref='author', lazy='dynamic')
     avatar = db.Column(db.String(150),  unique=True)
 
     
@@ -34,9 +33,9 @@ class User(UserMixin, db.Model):
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     send_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    send_user_username = db.relationship('User', backref='user', lazy='select')
+    send_user_username = db.relationship('User', lazy='select')
     content = db.Column(db.Text, nullable=True)
-    published = db.Column(db.DateTime, index=True, default=datetime.now())
+    published = db.Column(db.DateTime, index=True, default=datetime.now().strftime('%m.%d.%Y %H:%M:%S'))
     message_chat_id = db.Column(db.Integer, db.ForeignKey('chat.id'))
 
     def __repr__(self):

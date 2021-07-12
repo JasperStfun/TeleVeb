@@ -127,13 +127,11 @@ def handle_message(message, chat_id):
     if current_user.is_authenticated:
         chat = Chat.query.filter(Chat.id == chat_id).first_or_404()
         send_user = current_user.id
-        dt_now = datetime.now()
-        db_message_dt = dt_now.strftime('%m.%d.%Y %H:%M:%S')
         content = Message(content=message, message_chat_id=chat_id,
-                          send_user_id=send_user, published=db_message_dt)
+                          send_user_id=send_user)
         db.session.add(content)
         db.session.commit()
-        message_dt = dt_now.strftime('%d.%m.%Y %H:%M')
+        message_dt = datetime.now().strftime('%d.%m.%Y %H:%M')
         message_info = f'{message_dt} {current_user.username}: {message}'
         emit('display message', message_info, room=chat.unique_number)
 
