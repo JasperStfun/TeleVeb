@@ -7,6 +7,7 @@ from wtforms.validators import ValidationError, Length
 from app.model import User, UserArchive
 from wtforms.fields.html5 import EmailField, SearchField
 from flask_login import current_user
+from wtforms.fields import SelectField
 
 
 class LoginForm(FlaskForm):
@@ -109,3 +110,10 @@ class EmailEditForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
             raise ValidationError('Please use a different email adress.')
+
+
+class PrivacyEditForm(FlaskForm):
+    privacy = SelectField(u'Настройка приватности', choices=[('all', 'Все'),('friends', 'только друзья'),
+                    ('nobody', 'никто')])
+    submit = SubmitField('Change', 
+                    render_kw={"class": "btn btn-outline-primary"})

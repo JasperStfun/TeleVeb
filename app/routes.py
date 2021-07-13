@@ -2,7 +2,7 @@
 import uuid
 from flask import render_template, flash, redirect, request, url_for
 from app import app, db, socketio
-from app.forms import ChatForm, EmailEditForm, LoginForm, ProfileForm, RegistrationForm, UsernameEditForm
+from app.forms import ChatForm, EmailEditForm, LoginForm, ProfileForm, RegistrationForm, UsernameEditForm, PrivacyEditForm
 from app.forms import SearchForm
 from flask_login import current_user, login_user, login_required, logout_user
 from app.model import Message, User, Chat, UserArchive
@@ -24,14 +24,14 @@ def add_friend(username):
     user = User.query.filter_by(username=username).first()
     if User is None:
         flash(f'User {username} not found.')
-        return redirect(url_for('profile', username=username))
+        return redirect(url_for('edit_profile', pk=user.id))
     if user == current_user:
         flash('You cannot friendship with yourself!')
-        return redirect(url_for('profile', username=username))
+        return redirect(url_for('edit_profile', pk=user.id))
     current_user.add_friend(user)
     db.session.commit()
     flash(f'Now you are friends with {username}')
-    return redirect(url_for('profile', username=username))
+    return redirect(url_for('edit_profile', pk=user.id))
 
 
 @app.route('/remove_friend/<username>')
@@ -40,14 +40,46 @@ def del_friend(username):
     user = User.query.filter_by(username=username).first()
     if User is None:
         flash(f'User {username} not found.')
-        return redirect(url_for('profile', username=username))
+        return redirect(url_for('profile', pk=user.id))
     if user == current_user:
         flash('You cannot delete yourself!')
-        return redirect(url_for('profile', username=username))
+        return redirect(url_for('profile', pk=user.id))
     current_user.del_friend(user)
     db.session.commit()
     flash(f'{username} not your friend anymore')
-    return redirect(url_for('profile', username=username))
+    return redirect(url_for('edit_profile', pk=user.id))
+
+
+@app.route('/black/<username>')
+@login_required
+def add_black_user(username):
+    user = User.query.filter_by(username=username).first()
+    if User is None:
+        flash(f'User {username} not found.')
+        return redirect(url_for('edit_profile', pk=user.id))
+    if user == current_user:
+        flash('You cannot blocked yourself!')
+        return redirect(url_for('edit_profile', pk=user.id))
+    current_user.add_black_user(user)
+    db.session.commit()
+    flash(f'Now {username} in black list')
+    return redirect(url_for('edit_profile', pk=user.id))
+
+
+@app.route('/remove_black/<username>')
+@login_required
+def del_black_user(username):
+    user = User.query.filter_by(username=username).first()
+    if User is None:
+        flash(f'User {username} not found.')
+        return redirect(url_for('profile', pk=user.id))
+    if user == current_user:
+        flash('You cannot delete yourself!')
+        return redirect(url_for('profile', pk=user.id))
+    current_user.del_black_user(user)
+    db.session.commit()
+    flash(f'{username} not in black list anymore')
+    return redirect(url_for('profile', pk=user.id))
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -125,8 +157,12 @@ def chat(pk):
             (Chat.user_1_id == user_2.id) | (Chat.user_2_id == user_2.id)
         ).first()
         if chat_existence is None:
-            chat = create_chat(user_1, user_2,)
-            chat_id = chat.id
+            if user_1.is_blacked(user_2):
+                flash('You in black list')
+                return redirect(url_for('edit_profile', pk=user_2.id))
+            else:
+                chat = create_chat(user_1, user_2,)
+                chat_id = chat.id
         else:
             chat_id = chat_existence.id
         chat_form = ChatForm()
@@ -148,6 +184,7 @@ def create_chat(user_1, user_2):
 @socketio.on('send message')
 def handle_message(message, chat_id):
     if current_user.is_authenticated:
+        print('test')
         chat_existence = Chat.query.filter(Chat.id == chat_id).first_or_404()
         message = str(message)
         dt_now = datetime.now().strftime('%d.%m.%Y %H:%M')
@@ -170,21 +207,29 @@ def join(chat_id):
 @app.route('/profile/<pk>', methods=['GET', 'POST'])
 def user_profile(pk):
     if current_user.is_authenticated:
-        user = User.query.filter(User.id == pk)
+        user = User.query.filter(User.id == pk).first()
         profile_form = ProfileForm()
         profile_form.username.data = current_user.username
         profile_form.email.data = current_user.email
-        return render_template('user_profile.html',
-                               current_user=current_user, profile_form=profile_form, user=user)
+        if current_user.id == user.id:
+            return render_template('user_profile.html',
+                        current_user=current_user, profile_form=profile_form, user=user)
+        if current_user.id != user.id:
+            if user.privacy == 'all':
+                return render_template('user_profile.html',
+                        current_user=current_user, profile_form=profile_form, user=user)
+            if user.privacy == 'nobody':
+                flash('User has restricted access to his profile')
+                return redirect(url_for('index'))
+            if user.privacy == 'friends':
+                if user.is_friend(current_user):
+                    return render_template('user_profile.html',
+                        current_user=current_user, profile_form=profile_form, user=user)
+                else:
+                    flash('User has restricted access to his profile')
+                    return redirect(url_for('index'))
     flash('Login or register')
     return redirect(url_for('login'))
-
-
-#@app.route('/user/<username>')
-#@login_required
-#def user(username):
-    #user = User.query.filter_by(username=username).first_or_404()
-    #return render_template('user.html', user=user)
 
 
 @app.route('/edit_profile/<pk>', methods=['GET', 'POST'])
@@ -192,16 +237,19 @@ def edit_profile(pk):
     if current_user.is_authenticated:
         username_edit_form = UsernameEditForm()
         email_edit_form = EmailEditForm()
+        privacy_edit_form = PrivacyEditForm()
         if username_edit_form.validate_on_submit():
             edit_username(current_user, username_edit_form, pk)
         if email_edit_form.validate_on_submit():
             edit_email(current_user, email_edit_form, pk)
+        if privacy_edit_form.validate_on_submit():
+            edit_privacy(current_user, privacy_edit_form, pk)
         else:
             username_edit_form.username.data = current_user.username
             email_edit_form.email.data = current_user.email
         return render_template('edit_profile.html',
                                current_user=current_user, username_edit_form=username_edit_form,
-                               email_edit_form=email_edit_form)
+                               email_edit_form=email_edit_form, privacy_edit_form=privacy_edit_form)
     flash('Login or register')
     return redirect(url_for('login'))
 
@@ -221,4 +269,12 @@ def edit_email(current_user, email_edit_form, pk):
     user.email = email_edit_form.email.data
     db.session.commit()
     flash('You have successfully changed your email!')
+    return redirect(url_for('edit_profile', pk=pk))
+
+
+def edit_privacy(current_user, privacy_edit_form, pk):
+    user = User.query.filter(User.id == current_user.id).first()
+    user.privacy = privacy_edit_form.privacy.data
+    db.session.commit()
+    flash('Privacy settings accept')
     return redirect(url_for('edit_profile', pk=pk))
