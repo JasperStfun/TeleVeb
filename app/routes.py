@@ -16,6 +16,7 @@ import os
 @app.route('/index')
 @login_required
 def index():
+    print(current_user)
     user = User.query.filter(User.id == current_user.id).first()
     avatar = user.avatar
     return render_template('index.html', title='Home', current_user=current_user, avatar=avatar)
@@ -27,10 +28,8 @@ def register():
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        file = form.avatar.data
-        filename = str(uuid.uuid4()) + secure_filename(file.filename)
-        file.save(os.path.join('app/static/', 'avatars/', filename))
-        user = User(username=form.username.data, email=form.email.data, avatar=f'/static/avatars/{filename}')
+        avatar=set_avatar(form)
+        user = User(username=form.username.data, email=form.email.data, avatar=avatar)
         user_archive = UserArchive(username=form.username.data)
         user.set_password(form.password.data)
         db.session.add(user)
@@ -39,6 +38,18 @@ def register():
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('login'))
     return render_template('register.html', title='Регистрация', form=form)
+
+
+def set_avatar(form):
+    file = form.avatar.data
+    if file is not None:
+        filename = str(uuid.uuid4()) + secure_filename(file.filename)
+        file.save(os.path.join('app/static/', 'avatars/', filename))
+        avatar=f'/static/avatars/{filename}'
+
+    else:
+        avatar=f'https://api.multiavatar.com/{form.username.data}.png'
+    return avatar
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -132,7 +143,7 @@ def handle_message(message, chat_id):
         db.session.add(content)
         db.session.commit()
         message_dt = datetime.now().strftime('%d.%m.%Y %H:%M')
-        message_info = f'{message_dt} {current_user.username}: {message}'
+        message_info = f'{message_dt}<br> {current_user.username}: {message}'
         emit('display message', message_info, room=chat.unique_number)
 
 
