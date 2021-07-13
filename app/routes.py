@@ -11,12 +11,12 @@ from flask_socketio import emit, join_room
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
+from PIL import Image, ImageOps, ImageDraw
 
 @app.route('/')
 @app.route('/index')
 @login_required
 def index():
-    print(current_user)
     user = User.query.filter(User.id == current_user.id).first()
     avatar = user.avatar
     return render_template('index.html', title='Home', current_user=current_user, avatar=avatar)
@@ -39,17 +39,29 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', title='Регистрация', form=form)
 
-
 def set_avatar(form):
     file = form.avatar.data
     if file is not None:
         filename = str(uuid.uuid4()) + secure_filename(file.filename)
         file.save(os.path.join('app/static/', 'avatars/', filename))
-        avatar=f'/static/avatars/{filename}'
-
+        edit_download_image(filename)
+        avatar=f'/static/avatars/{filename}.png'
     else:
         avatar=f'https://api.multiavatar.com/{form.username.data}.png'
     return avatar
+
+def edit_download_image(filename):
+    image = Image.open(f'app/static/avatars/{filename}')
+    size = (200, 200)
+    mask = Image.new('L', size, 0)
+    draw = ImageDraw.Draw(mask) 
+    draw.ellipse((0, 0) + size, fill=255)
+    image = image.resize(size)
+    output = ImageOps.fit(image, mask.size, centering=(0.5, 0.5))
+    output.putalpha(mask)
+    output.thumbnail(size, Image.ANTIALIAS)
+    output.save(f'app/static/avatars/{filename}.png')
+    os.remove(f'app/static/avatars/{filename}')
 
 
 @app.route('/login', methods=['GET', 'POST'])
