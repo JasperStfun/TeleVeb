@@ -1,5 +1,4 @@
 from datetime import datetime
-from enum import unique
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
@@ -27,7 +26,7 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return f'<User: {self.username} id: {self.id}>'
+        return f'<User: {self.username} id: {self.id}, avatar: {self.avatar}>'
 
 
 class Message(db.Model):
@@ -35,7 +34,7 @@ class Message(db.Model):
     send_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     send_user_username = db.relationship('User', lazy='select')
     content = db.Column(db.Text, nullable=True)
-    published = db.Column(db.DateTime, index=True, default=datetime.now().strftime('%m.%d.%Y %H:%M:%S'))
+    published = db.Column(db.DateTime, index=True, default=datetime.now().strftime('%Y.%m.%d %H:%M:%S'))
     message_chat_id = db.Column(db.Integer, db.ForeignKey('chat.id'))
 
     def __repr__(self):
