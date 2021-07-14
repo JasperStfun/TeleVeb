@@ -11,6 +11,7 @@ from flask_socketio import emit, join_room
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
+from PIL import Image, ImageOps, ImageDraw
 
 @app.route('/')
 @app.route('/index')
@@ -27,10 +28,8 @@ def register():
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        file = form.avatar.data
-        filename = str(uuid.uuid4()) + secure_filename(file.filename)
-        file.save(os.path.join('app/static/', 'avatars/', filename))
-        user = User(username=form.username.data, email=form.email.data, avatar=f'/static/avatars/{filename}')
+        avatar=set_avatar(form)
+        user = User(username=form.username.data, email=form.email.data, avatar=avatar)
         user_archive = UserArchive(username=form.username.data)
         user.set_password(form.password.data)
         db.session.add(user)
@@ -39,6 +38,30 @@ def register():
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('login'))
     return render_template('register.html', title='Регистрация', form=form)
+
+def set_avatar(form):
+    file = form.avatar.data
+    if file is not None:
+        filename = str(uuid.uuid4()) + secure_filename(file.filename)
+        file.save(os.path.join('app/static/', 'avatars/', filename))
+        edit_download_image(filename)
+        avatar=f'/static/avatars/{filename}.png'
+    else:
+        avatar=f'https://api.multiavatar.com/{form.username.data}.png'
+    return avatar
+
+def edit_download_image(filename):
+    image = Image.open(f'app/static/avatars/{filename}')
+    size = (200, 200)
+    mask = Image.new('L', size, 0)
+    draw = ImageDraw.Draw(mask) 
+    draw.ellipse((0, 0) + size, fill=255)
+    image = image.resize(size)
+    output = ImageOps.fit(image, mask.size, centering=(0.5, 0.5))
+    output.putalpha(mask)
+    output.thumbnail(size, Image.ANTIALIAS)
+    output.save(f'app/static/avatars/{filename}.png')
+    os.remove(f'app/static/avatars/{filename}')
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -127,14 +150,12 @@ def handle_message(message, chat_id):
     if current_user.is_authenticated:
         chat = Chat.query.filter(Chat.id == chat_id).first_or_404()
         send_user = current_user.id
-        dt_now = datetime.now()
-        db_message_dt = dt_now.strftime('%m.%d.%Y %H:%M:%S')
         content = Message(content=message, message_chat_id=chat_id,
-                          send_user_id=send_user, published=db_message_dt)
+                          send_user_id=send_user, published=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         db.session.add(content)
         db.session.commit()
-        message_dt = dt_now.strftime('%d.%m.%Y %H:%M')
-        message_info = f'{message_dt} {current_user.username}: {message}'
+        message_info = (f'{content.published}<br> <img src="{content.send_user_username.avatar}" height="35" width="35">'
+                        f'{content.send_user_username.username}: {message}')
         emit('display message', message_info, room=chat.unique_number)
 
 
