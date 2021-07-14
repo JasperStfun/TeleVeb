@@ -154,8 +154,9 @@ def handle_message(message, chat_id):
                           send_user_id=send_user)
         db.session.add(content)
         db.session.commit()
-        message_dt = datetime.now().strftime('%d.%m.%Y %H:%M')
-        message_info = f'{message_dt}<br> {current_user.username}: {message}'
+        print(content)
+        message_info = (f'{content.published}<br> <img src="{content.send_user_username.avatar}" height="35" width="35">'
+                        f'{content.send_user_username.username}: {message}')
         emit('display message', message_info, room=chat.unique_number)
 
 
