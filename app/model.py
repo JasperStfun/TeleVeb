@@ -34,7 +34,7 @@ class Message(db.Model):
     send_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     send_user_username = db.relationship('User', lazy='select')
     content = db.Column(db.Text, nullable=True)
-    published = db.Column(db.DateTime, index=True, default=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    published = db.Column(db.DateTime, index=True)
     message_chat_id = db.Column(db.Integer, db.ForeignKey('chat.id'))
 
     def __repr__(self):
