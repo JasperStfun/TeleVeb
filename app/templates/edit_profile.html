@@ -27,6 +27,18 @@
                 </div>
                 {{ email_edit_form.submit }}
             </form>
+            <h3>Кто может просматривать ваш профиль?</h3>
+            <form action="" method="POST">
+                {{ privacy_edit_form.hidden_tag() }}
+                <div class="form-group">
+                    {{ privacy_edit_form.privacy.label }}<br>
+                    {{ privacy_edit_form.privacy(size=3) }}<br>
+                    {% for error in privacy_edit_form.privacy.errors %}
+                    <span style="color: blue;">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                {{ email_edit_form.submit }}
+            </form>
         </div>
     </div>
 </div>
