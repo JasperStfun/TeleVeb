@@ -9,13 +9,17 @@ from app.model import Message, User, Chat, UserArchive
 from werkzeug.urls import url_parse
 from flask_socketio import emit, join_room
 from datetime import datetime
-
+from werkzeug.utils import secure_filename
+import os
+from PIL import Image, ImageOps, ImageDraw
 
 @app.route('/')
 @app.route('/index')
 @login_required
 def index():
-    return render_template('index.html', title='Home', current_user=current_user)
+    user = User.query.filter(User.id == current_user.id).first()
+    avatar = user.avatar
+    return render_template('index.html', title='Home', current_user=current_user, avatar=avatar)
 
 
 @app.route('/friends/<username>')
@@ -88,7 +92,8 @@ def register():
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(username=form.username.data, email=form.email.data)
+        avatar=set_avatar(form)
+        user = User(username=form.username.data, email=form.email.data, avatar=avatar)
         user_archive = UserArchive(username=form.username.data)
         user.set_password(form.password.data)
         db.session.add(user)
@@ -97,6 +102,30 @@ def register():
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('login'))
     return render_template('register.html', title='Регистрация', form=form)
+
+def set_avatar(form):
+    file = form.avatar.data
+    if file is not None:
+        filename = str(uuid.uuid4()) + secure_filename(file.filename)
+        file.save(os.path.join('app/static/', 'avatars/', filename))
+        edit_download_image(filename)
+        avatar=f'/static/avatars/{filename}.png'
+    else:
+        avatar=f'https://api.multiavatar.com/{form.username.data}.png'
+    return avatar
+
+def edit_download_image(filename):
+    image = Image.open(f'app/static/avatars/{filename}')
+    size = (200, 200)
+    mask = Image.new('L', size, 0)
+    draw = ImageDraw.Draw(mask) 
+    draw.ellipse((0, 0) + size, fill=255)
+    image = image.resize(size)
+    output = ImageOps.fit(image, mask.size, centering=(0.5, 0.5))
+    output.putalpha(mask)
+    output.thumbnail(size, Image.ANTIALIAS)
+    output.save(f'app/static/avatars/{filename}.png')
+    os.remove(f'app/static/avatars/{filename}')
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -151,12 +180,13 @@ def chat(pk):
     if current_user.is_authenticated:
         user_1 = current_user
         user_2 = User.query.filter(User.id == pk).first_or_404()
-        chat_existence = Chat.query.filter(
+        chat = Chat.query.filter(
             (Chat.user_1_id == user_1.id) | (Chat.user_2_id == user_1.id)
         ).filter(
             (Chat.user_1_id == user_2.id) | (Chat.user_2_id == user_2.id)
         ).first()
-        if chat_existence is None:
+
+        if chat is None:
             if user_1.is_blacked(user_2):
                 flash('You in black list')
                 return redirect(url_for('edit_profile', pk=user_2.id))
@@ -164,7 +194,7 @@ def chat(pk):
                 chat = create_chat(user_1, user_2,)
                 chat_id = chat.id
         else:
-            chat_id = chat_existence.id
+            chat_id = chat.id
         chat_form = ChatForm()
         all_messages = Message.query.filter(Message.message_chat_id == chat_id).all()
         return render_template('chat.html', user_1=user_1, user_2=user_2, chat_id=chat_id,
@@ -174,8 +204,11 @@ def chat(pk):
 
 
 def create_chat(user_1, user_2):
-    unique_uuid = uuid.uuid4()
-    chat = Chat(user_1_id=user_1.id, user_2_id=user_2.id, unique_number=str(unique_uuid))
+    is_uniq_number_exists = True
+    while is_uniq_number_exists:
+        unique_number =  str(uuid.uuid4())
+        is_uniq_number_exists = Chat.query.filter(Chat.unique_number == unique_number).first()
+    chat = Chat(user_1_id=user_1.id, user_2_id=user_2.id, unique_number=unique_number)
     db.session.add(chat)
     db.session.commit()
     return chat
@@ -184,23 +217,21 @@ def create_chat(user_1, user_2):
 @socketio.on('send message')
 def handle_message(message, chat_id):
     if current_user.is_authenticated:
-        print('test')
-        chat_existence = Chat.query.filter(Chat.id == chat_id).first_or_404()
-        message = str(message)
-        dt_now = datetime.now().strftime('%d.%m.%Y %H:%M')
+        chat = Chat.query.filter(Chat.id == chat_id).first_or_404()
         send_user = current_user.id
         content = Message(content=message, message_chat_id=chat_id,
-                          send_user_id=send_user, published=dt_now)
+                          send_user_id=send_user, published=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         db.session.add(content)
         db.session.commit()
-        message_info = f'{dt_now} {current_user.username}: {message}'
-        emit('display message', message_info, room=chat_existence.unique_number)
+        message_info = (f'{content.published}<br> <img src="{content.send_user_username.avatar}" height="35" width="35">'
+                        f'{content.send_user_username.username}: {message}')
+        emit('display message', message_info, room=chat.unique_number)
 
 
 @socketio.on('join')
 def join(chat_id):
-    chat_existence = Chat.query.filter(Chat.id == chat_id).first_or_404()
-    room = chat_existence.unique_number
+    chat = Chat.query.filter(Chat.id == chat_id).first_or_404()
+    room = chat.unique_number
     join_room(room)
 
 

@@ -1,5 +1,4 @@
 from datetime import datetime
-from enum import unique
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
@@ -29,6 +28,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), nullable=False, unique=True)
     password_hash = db.Column(db.String(300))
     role = db.Column(db.String(10), default='user')
+    avatar = db.Column(db.String(150),  unique=True)
     privacy = db.Column(db.String, default='all')
     message = db.relationship('Message', backref='author', lazy='dynamic')
     friendlist = db.relationship('User', secondary=friends,
@@ -75,26 +75,21 @@ class User(UserMixin, db.Model):
     
     ###
     def __repr__(self):
-        return f'<User: {self.username} id: {self.id}>'
+        return f'<User: {self.username} id: {self.id}, avatar: {self.avatar}>'
 
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     send_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    send_user_username = db.relationship('User', backref='user', lazy='select')
+    send_user_username = db.relationship('User', lazy='select')
     content = db.Column(db.Text, nullable=True)
-    published = db.Column(db.DateTime, index=True, default=datetime.now())
+    published = db.Column(db.DateTime, index=True)
     message_chat_id = db.Column(db.Integer, db.ForeignKey('chat.id'))
 
     def __repr__(self):
         return (f'<Message_id: {self.id} Chat_id: {self.message_chat_id}'
                 f' Username: {self.send_user_username}'
-                f' Content: {self.content}>')
-
-
-class UserPicture(db.Model):
-    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    pictures = db.Column(db.String)
+                f' Content: {self.content} Published: {self.published}>')
 
 
 class Chat(db.Model):

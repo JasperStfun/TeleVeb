@@ -2,6 +2,7 @@ from flask.app import Flask
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, PasswordField, StringField, SubmitField
 from wtforms.fields.simple import TextAreaField
+from flask_wtf.file import FileField, FileRequired
 from wtforms.validators import DataRequired, Email, EqualTo, Required
 from wtforms.validators import ValidationError, Length
 from app.model import User, UserArchive
@@ -26,8 +27,9 @@ class RegistrationForm(FlaskForm):
                            render_kw={"class": "form-control"})
     email = EmailField('Email', validators=[DataRequired(), Email()],
                        render_kw={"class": "form-control"})
+    avatar = FileField('Avatar', render_kw={"class": "form-control"})
     password = PasswordField('Password', validators=[DataRequired(),
-                                                     Length(min=4, max=16)],
+                             Length(min=4, max=16)],
                              render_kw={"class": "form-control"})
     password_2 = PasswordField(
         'Repeat password', validators=[DataRequired(), EqualTo('password')],
