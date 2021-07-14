@@ -16,7 +16,7 @@
             <h1>Вы: {{ user.username }}</h1>
             <div>
                 {% if user == current_user %}
-                <p>У вас {{ user.friends.count() }} друзей, вы в друзьях у {{ user.friendlist.count() }}.</p>
+                <p>У вас {{ user.friendlist.count() }} друзей, вы в друзьях у {{ user.friends.count() }}.</p>
                 {% elif not current_user.is_friend(user) %}
                 <p><a href="{{ url_for('add_friend', username=user.username) }}">Add friend</a></p>
                 {% else %}
@@ -24,13 +24,13 @@
                 {% endif %}
             </div>
             <h4>Друзья:</h4>
-            {% for friend in user.friends %}
+            {% for friend in user.friendlist %}
             {{ friend.username }}
             {% endfor %}
             <div>
                 <h4>Чёрный список:</h4>
-                <p>У вас {{ user.black_list.count() }} пользователей в чёрном списке, 
-                    вы в чёрном списке у {{ user.blacklist_user.count() }} пользователей.</p>
+                <p>У вас {{ user.blacklist_user.count() }} пользователей в чёрном списке, 
+                    вы в чёрном списке у {{ user.black_list.count() }} пользователей.</p>
                 {% if user == current_user %}
                 {% elif not current_user.is_friend(user) %}
                 <p><a href="{{ url_for('add_black_user', username=user.username) }}">Add in black list</a></p>
@@ -40,7 +40,7 @@
             </div>
             <div>
             <h4>Пользователи в чёрном списке:</h4>
-            {% for black in user.black_list %}
+            {% for black in user.blacklist_user %}
             {{ black.username }}
             {% endfor %}
             </div>
