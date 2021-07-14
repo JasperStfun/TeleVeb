@@ -151,7 +151,7 @@ def handle_message(message, chat_id):
         chat = Chat.query.filter(Chat.id == chat_id).first_or_404()
         send_user = current_user.id
         content = Message(content=message, message_chat_id=chat_id,
-                          send_user_id=send_user)
+                          send_user_id=send_user, published=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         db.session.add(content)
         db.session.commit()
         print(content)
