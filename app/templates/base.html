@@ -9,6 +9,7 @@
             <!-- Bootstrap CSS -->
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+            <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='CSS/styles.css') }}">
             {% if title %}
                 <title> {{ title }} - TeleVeb</title>
             {% else %}
@@ -18,23 +19,46 @@
     {% endblock %}
     <body>
         <header>
-            {% if current_user.is_anonymous %}
-                <a href="{{ url_for('login') }}">Login</a>
-                <a href="{{ url_for('register') }}">Register</a>
-            {% else %}
-                <a  href="{{ url_for('index') }}">Home</a>
-                <a  href="{{ url_for('welcome_to_chat') }}">Go Chat!</a>
-                <a  href="{{ url_for('user_profile', pk=current_user.id) }}">My profile</a>
-                <a  href="{{ url_for('logout') }}">Logout</a>
-            {% endif %}
+            <nav class="navbar navbar-expand-lg">
+                <div class="container-fluid">
+                    {% if current_user.is_anonymous %}
+                    <span class="navbar-brand mb-0 h1" style="padding: 0px 10px;">Welcome to site!</span>
+                    {% else %}
+                    <span class="navbar-brand mb-0 h1" style="padding: 0px 10px;"><img src='{{ current_user.avatar }}' height="100" width="100"></span>
+                    {% endif %}
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                        <div class="navbar-nav">
+                            {% if current_user.is_anonymous %}
+                                <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                                <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+                            {% else %}
+                                <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                                <a class="nav-link" href="{{ url_for('welcome_to_chat') }}">Go Chat!</a>
+                                <a class="nav-link" href="{{ url_for('user_profile', pk=current_user.id) }}">My profile</a>
+                                <a class="nav-link" href="{{ url_for('logout') }}">Log out</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </nav>
         </header>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    {{ message }}
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        {% block content %}{% endblock %}        
+        <div class="container-fluid">
+            <div class="row">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="alert alert-danger" role="alert">
+                            {% for message in messages %}
+                                {{ message }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+        {% block content %}{% endblock %}           
     </body>
 </html>
+
