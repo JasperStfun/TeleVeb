@@ -18,45 +18,23 @@
     {% endblock %}
     <body>
         <header>
-            <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #3d6a66;">
-                <div class="container-fluid">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" fill="#f9feff" class="bi bi-subtract" viewBox="0 0 16 16">
-                        <path d="M0 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2H2a2 2 0 0 1-2-2V2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H2z"/>
-                    </svg>
-                    <span class="navbar-brand mb-0 h1" style="padding: 0px 10px;">TeleVeb</span>
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                        <div class="navbar-nav">
-                            {% if current_user.is_anonymous %}
-                            <a class="nav-link active" aria-current="page" href="{{ url_for('login') }}">Login</a>
-                            <a class="nav-link active" aria-current="page" href="{{ url_for('register') }}">Register</a>
-                            {% else %}
-                                <a class="nav-link active" aria-current="page" href="{{ url_for('index') }}">Home</a>
-                                <a class="nav-link active" aria-current="page" href="{{ url_for('welcome_to_chat') }}">Go Chat!</a>
-                                <a class="nav-link active" aria-current="page" href="{{ url_for('user_profile', pk=current_user.id) }}">My profile</a>
-                                <a class="nav-link active" aria-current="page" href="{{ url_for('logout') }}">Logout</a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </nav>
+            {% if current_user.is_anonymous %}
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('register') }}">Register</a>
+            {% else %}
+                <a  href="{{ url_for('index') }}">Home</a>
+                <a  href="{{ url_for('welcome_to_chat') }}">Go Chat!</a>
+                <a  href="{{ url_for('user_profile', pk=current_user.id) }}">My profile</a>
+                <a  href="{{ url_for('logout') }}">Logout</a>
+            {% endif %}
         </header>
-        <div class="container-fluid">
-            <div class="row">
-                {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                        <div class="alert alert-danger" role="alert">
-                            {% for message in messages %}
-                                {{ message }}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                {% endwith %}
-            </div>
-        </div>
-        {% block content %}
-        {% endblock %}        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    {{ message }}
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}        
     </body>
 </html>

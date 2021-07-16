@@ -8,39 +8,36 @@
 
 {% block content %}
     <h3>Чат с {{ user_2.username }}</h3>
-    <div class="messages" style="overflow:auto; width: 1900px; height: 490px;">
-            {% for message in all_messages %}
-                {{ message.published }}<br>
-                <img src='{{ message.send_user_username.avatar }}' height="35" width="35">{{ message.send_user_username.username }}: {{ message.content }}<br>
-            {% endfor %}
-    </div><br>
-
+        {% for message in all_messages %}
+            {{ message.published }}<br>
+            <img src='{{ message.send_user_username.avatar }}' height="35" width="35">{{ message.send_user_username.username }}: {{ message.content }}<br>
+        {% endfor %}
     <p>
         {{ chat_form.user_message.label }}<br> 
         {{ chat_form.user_message(rows='10',cols='100') }}<br>
-        <button id="sendbutton" class="btn btn-outline-primary">Send</button>
-    </p>
+        <button id="sendbutton">Send</button>
+    </p>ss
     <script type="text/javascript">
-    var objDiv = document.querySelector(".messages");
-        $(document).ready(function() {
-            var socket = io.connect('http://127.0.0.1:5000');
+        var objDiv = document.querySelector(".messages");
+            $(document).ready(function() {
+                var socket = io.connect('http://127.0.0.1:5000');
 
-            socket.on('connect', function() {
-                socket.emit('join', {{ chat_id }});
-            objDiv.scrollTop = objDiv.scrollHeight;
+                socket.on('connect', function() {
+                    socket.emit('join', {{ chat_id }});
+                objDiv.scrollTop = objDiv.scrollHeight;
+                    
+                });
+                socket.on('display message', function(msg) {
+                    $(".messages").append(msg+'</br>');
+                    console.log('Received message');
                 
-            });
-            socket.on('display message', function(msg) {
-                $(".messages").append(msg+'</br>');
-                console.log('Received message');
-            
-            objDiv.scrollTop = objDiv.scrollHeight;
-            });
+                objDiv.scrollTop = objDiv.scrollHeight;
+                });
 
-            $('#sendbutton').on('click', function() {
-                socket.emit('send message', $('#user_message').val(), {{ chat_id }});
-                $('#user_message').val('');
+                $('#sendbutton').on('click', function() {
+                    socket.emit('send message', $('#user_message').val(), {{ chat_id }});
+                    $('#user_message').val('');
+                });
             });
-        });
     </script>
 {% endblock %}
