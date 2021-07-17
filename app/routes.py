@@ -186,13 +186,13 @@ def chat(pk):
             (Chat.user_1_id == user_2.id) | (Chat.user_2_id == user_2.id)
         ).first()
 
+        if user_2.is_blacked(user_1):
+            flash('You in black list')
+            return redirect(url_for('edit_profile', pk=user_2.id))
+
         if chat is None:
-            if user_1.is_blacked(user_2):
-                flash('You in black list')
-                return redirect(url_for('edit_profile', pk=user_2.id))
-            else:
-                chat = create_chat(user_1, user_2,)
-                chat_id = chat.id
+            chat = create_chat(user_1, user_2,)
+            chat_id = chat.id
         else:
             chat_id = chat.id
         chat_form = ChatForm()
@@ -223,7 +223,7 @@ def handle_message(message, chat_id):
                           send_user_id=send_user, published=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         db.session.add(content)
         db.session.commit()
-        message_info = (f'{content.published}<br> <img src="{content.send_user_username.avatar}" height="35" width="35">'
+        message_info = (f'{content.published.strftime("%Y.%m.%d %H:%M")}<br> <img src="{content.send_user_username.avatar}" height="35" width="35">'
                         f'{content.send_user_username.username}: {message}')
         emit('display message', message_info, room=chat.unique_number)
 
