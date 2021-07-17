@@ -21,6 +21,7 @@ Jinja2==3.0.1
 Mako==1.1.4
 MarkupSafe==2.0.1
 mccabe==0.6.1
+multiavatar==1.0.3
 phonenumbers==8.12.26
 Pillow==8.3.1
 psycopg2-binary==2.9.1
