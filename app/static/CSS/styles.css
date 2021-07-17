@@ -1,0 +1,42 @@
+.navbar {
+    background: rgb(148,176,183);
+    background: linear-gradient(180deg, rgba(148,176,183,0.6110819327731092) 0%, rgba(74,112,122,1) 100%);
+    height: 120px;
+}
+
+#main{
+    margin-right: auto;
+    color: #ddddda;
+    font-size: 20px;
+}
+
+#logout {
+    margin-right: 50;
+    color: #ddddda;
+    font-size: 20px;
+    
+}
+
+#logout:hover {
+    color: rgba(74,112,122,1);
+}
+
+#link{
+    color: #ddddda;
+}
+
+#link:hover {
+    color: rgba(74,112,122,1);
+}
+
+.navbar-toggler {
+    color: #ddddda;
+}
+
+.navbar-brand {
+    color: #ddddda;
+}
+
+.body {
+    background: rgba(148, 176, 183, 0.397);
+}

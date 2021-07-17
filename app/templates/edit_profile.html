@@ -1,10 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid">
     <h1>Edit my profile</h1>
-    <div class="row">
-        <div class="col-xl-3">
             <form action="" method="POST">
                 {{ username_edit_form.hidden_tag() }}
                 <div class="form-group">
@@ -39,7 +36,4 @@
                 </div>
                 {{ email_edit_form.submit }}
             </form>
-        </div>
-    </div>
-</div>
 {% endblock %}

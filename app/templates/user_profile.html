@@ -13,7 +13,11 @@
                 {{ profile_form.email.label }}<br>
                 {{ profile_form.email(readonly=true) }}<br>           
             </div>
-            <h1>Вы: {{ user.username }}</h1>
+            {% if user.username == current_user.username %}
+                <h1>Вы: {{ user.username }}</h1>
+            {% else %}
+                <h1>Профиль пользователя: {{ user.username }}</h1>
+            {% endif %}
             <div>
                 {% if user == current_user %}
                 <p>У вас {{ user.friendlist.count() }} друзей, вы в друзьях у {{ user.friends.count() }}.</p>
