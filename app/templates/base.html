@@ -17,30 +17,30 @@
             {% endif %}
         </head>
     {% endblock %}
-    <body>
+    <body class="body">
         <header>
             <nav class="navbar navbar-expand-lg">
                 <div class="container-fluid">
                     {% if current_user.is_anonymous %}
-                    <span class="navbar-brand mb-0 h1" style="padding: 0px 10px;">Welcome to site!</span>
+                    <span class="navbar-brand mb-0 h1">Welcome to site!</span>
                     {% else %}
-                    <span class="navbar-brand mb-0 h1" style="padding: 0px 10px;"><img src='{{ current_user.avatar }}' height="100" width="100"></span>
+                    <span class="navbar-brand"><img src='{{ current_user.avatar }}' height="100" width="100"></span>
                     {% endif %}
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                        <div class="navbar-nav">
-                            {% if current_user.is_anonymous %}
-                                <a class="nav-link" href="{{ url_for('login') }}">Login</a>
-                                <a class="nav-link" href="{{ url_for('register') }}">Register</a>
-                            {% else %}
-                                <a class="nav-link" href="{{ url_for('index') }}">Home</a>
-                                <a class="nav-link" href="{{ url_for('welcome_to_chat') }}">Go Chat!</a>
-                                <a class="nav-link" href="{{ url_for('user_profile', pk=current_user.id) }}">My profile</a>
-                                <a class="nav-link" href="{{ url_for('logout') }}">Log out</a>
-                            {% endif %}
-                        </div>
+                    <div class="navbar-nav" id="main">
+                        {% if current_user.is_anonymous %}
+                            <a class="nav-link" id="link" href="{{ url_for('login') }}">Login</a>
+                            <a class="nav-link" id="link" href="{{ url_for('register') }}">Register</a>
+                        {% else %}
+                            <a class="nav-link" id="link" href="{{ url_for('index') }}">Home</a>
+                            <a class="nav-link" id="link" href="{{ url_for('welcome_to_chat') }}">Go chat!</a>
+                            <a class="nav-link" id="link" href="{{ url_for('user_profile', pk=current_user.id) }}">My profile</a>
+                        {% endif %}
+                    </div>
+                    <div class="navbar-nav">
+                        {% if current_user.is_anonymous %}
+                        {% else %}
+                            <a class="nav-link" id="logout"href="{{ url_for('logout') }}">Log out</a>
+                        {% endif %}
                     </div>
                 </div>
             </nav>
