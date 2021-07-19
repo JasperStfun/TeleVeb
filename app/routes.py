@@ -2,7 +2,8 @@
 import uuid
 from flask import render_template, flash, redirect, request, url_for
 from app import app, db, socketio
-from app.forms import ChatForm, EmailEditForm, LoginForm, ProfileForm, RegistrationForm, UsernameEditForm, PrivacyEditForm
+from app.forms import ChatForm, EmailEditForm, LoginForm, ProfileForm, RegistrationForm, UsernameEditForm, \
+    PrivacyEditForm
 from app.forms import SearchForm
 from flask_login import current_user, login_user, login_required, logout_user
 from app.model import Message, User, Chat, UserArchive
@@ -12,6 +13,7 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
 from PIL import Image, ImageOps, ImageDraw
+
 
 @app.route('/')
 @app.route('/index')
@@ -92,7 +94,7 @@ def register():
         return redirect(url_for('index'))
     form = RegistrationForm()
     if form.validate_on_submit():
-        avatar=set_avatar(form)
+        avatar = set_avatar(form)
         user = User(username=form.username.data, email=form.email.data, avatar=avatar)
         user_archive = UserArchive(username=form.username.data)
         user.set_password(form.password.data)
@@ -103,22 +105,24 @@ def register():
         return redirect(url_for('login'))
     return render_template('register.html', title='Регистрация', form=form)
 
+
 def set_avatar(form):
     file = form.avatar.data
     if file is not None:
         filename = str(uuid.uuid4()) + secure_filename(file.filename)
         file.save(os.path.join('app/static/', 'avatars/', filename))
         edit_download_image(filename)
-        avatar=f'/static/avatars/{filename}.png'
+        avatar = f'/static/avatars/{filename}.png'
     else:
-        avatar=f'https://api.multiavatar.com/{form.username.data}.png'
+        avatar = f'https://api.multiavatar.com/{form.username.data}.png'
     return avatar
+
 
 def edit_download_image(filename):
     image = Image.open(f'app/static/avatars/{filename}')
     size = (200, 200)
     mask = Image.new('L', size, 0)
-    draw = ImageDraw.Draw(mask) 
+    draw = ImageDraw.Draw(mask)
     draw.ellipse((0, 0) + size, fill=255)
     image = image.resize(size)
     output = ImageOps.fit(image, mask.size, centering=(0.5, 0.5))
@@ -191,7 +195,7 @@ def chat(pk):
             return redirect(url_for('edit_profile', pk=user_2.id))
 
         if chat is None:
-            chat = create_chat(user_1, user_2,)
+            chat = create_chat(user_1, user_2, )
             chat_id = chat.id
         else:
             chat_id = chat.id
@@ -206,7 +210,7 @@ def chat(pk):
 def create_chat(user_1, user_2):
     is_uniq_number_exists = True
     while is_uniq_number_exists:
-        unique_number =  str(uuid.uuid4())
+        unique_number = str(uuid.uuid4())
         is_uniq_number_exists = Chat.query.filter(Chat.unique_number == unique_number).first()
     chat = Chat(user_1_id=user_1.id, user_2_id=user_2.id, unique_number=unique_number)
     db.session.add(chat)
@@ -223,8 +227,10 @@ def handle_message(message, chat_id):
                           send_user_id=send_user, published=datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         db.session.add(content)
         db.session.commit()
-        message_info = (f'{content.published.strftime("%Y.%m.%d %H:%M")}<br> <img src="{content.send_user_username.avatar}" height="35" width="35">'
-                        f'{content.send_user_username.username}: {message}')
+        message_info = (
+            f'{content.published.strftime("%Y.%m.%d %H:%M")}<br>'
+            f'<img src="{content.send_user_username.avatar}" height="35" width="35">'
+            f'{content.send_user_username.username}: {message}')
         emit('display message', message_info, room=chat.unique_number)
 
 
@@ -244,18 +250,18 @@ def user_profile(pk):
         profile_form.email.data = current_user.email
         if current_user.id == user.id:
             return render_template('user_profile.html',
-                        current_user=current_user, profile_form=profile_form, user=user)
+                                   current_user=current_user, profile_form=profile_form, user=user)
         if current_user.id != user.id:
             if user.privacy == 'all':
                 return render_template('user_profile.html',
-                        current_user=current_user, profile_form=profile_form, user=user)
+                                       current_user=current_user, profile_form=profile_form, user=user)
             if user.privacy == 'nobody':
                 flash('User has restricted access to his profile')
                 return redirect(url_for('index'))
             if user.privacy == 'friends':
                 if user.is_friend(current_user):
                     return render_template('user_profile.html',
-                        current_user=current_user, profile_form=profile_form, user=user)
+                                           current_user=current_user, profile_form=profile_form, user=user)
                 else:
                     flash('User has restricted access to his profile')
                     return redirect(url_for('index'))

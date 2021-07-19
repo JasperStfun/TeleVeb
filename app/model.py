@@ -9,15 +9,16 @@ from app import login
 def load_user(id):
     return User.query.get(int(id))
 
+
 friends = db.Table('friends',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
-    db.Column('friend_id', db.Integer, db.ForeignKey('user.id'))
-)
+                   db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+                   db.Column('friend_id', db.Integer, db.ForeignKey('user.id'))
+                   )
 
 black_list = db.Table('black_list',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
-    db.Column('banned_id', db.Integer, db.ForeignKey('user.id'))
-)
+                      db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+                      db.Column('banned_id', db.Integer, db.ForeignKey('user.id'))
+                      )
 
 
 class User(UserMixin, db.Model):
@@ -26,18 +27,18 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), nullable=False, unique=True)
     password_hash = db.Column(db.String(300))
     role = db.Column(db.String(10), default='user')
-    avatar = db.Column(db.String(150),  unique=True)
+    avatar = db.Column(db.String(150), unique=True)
     privacy = db.Column(db.String, default='all')
     message = db.relationship('Message', backref='author', lazy='dynamic')
     friendlist = db.relationship('User', secondary=friends,
-        primaryjoin=(friends.c.user_id == id),
-        secondaryjoin=(friends.c.friend_id == id),
-        backref=db.backref('friends', lazy='dynamic'), lazy='dynamic')
+                                 primaryjoin=(friends.c.user_id == id),
+                                 secondaryjoin=(friends.c.friend_id == id),
+                                 backref=db.backref('friends', lazy='dynamic'), lazy='dynamic')
     blacklist_user = db.relationship('User', secondary=black_list,
-        primaryjoin=(black_list.c.user_id == id),
-        secondaryjoin=(black_list.c.banned_id == id),
-        backref=db.backref('black_list', lazy='dynamic'), lazy='dynamic')
-    
+                                     primaryjoin=(black_list.c.user_id == id),
+                                     secondaryjoin=(black_list.c.banned_id == id),
+                                     backref=db.backref('black_list', lazy='dynamic'), lazy='dynamic')
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -51,11 +52,11 @@ class User(UserMixin, db.Model):
     def del_friend(self, user):
         if self.is_friend(user):
             self.friendlist.remove(user)
-    
+
     def is_friend(self, user):
         return self.friendlist.filter(
             friends.c.friend_id == user.id).count() > 0
-    
+
     def add_black_user(self, user):
         if not self.is_blacked(user):
             self.blacklist_user.append(user)
@@ -63,11 +64,11 @@ class User(UserMixin, db.Model):
     def del_black_user(self, user):
         if self.is_blacked(user):
             self.blacklist_user.remove(user)
-    
+
     def is_blacked(self, user):
         return self.blacklist_user.filter(
             black_list.c.banned_id == user.id).count() > 0
-    
+
     def __repr__(self):
         return f'<User: {self.username} id: {self.id}, avatar: {self.avatar}>'
 
@@ -101,4 +102,3 @@ class Chat(db.Model):
 class UserArchive(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(21), nullable=False, unique=True)
-
