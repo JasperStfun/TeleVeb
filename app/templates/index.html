@@ -2,7 +2,18 @@
 
 <html>
     <body>
-        {% block content %} 
+        {% block content %}
+          <form action="" method="GET">
+            <h3>Создать паблик:</h3>
+               {{ form.submit }} 
+            {% for public_chat in public %}
+            <a href="{{ public.id }}">{{ public_chat }}</a>
+            {% endfor %}
+           </form>
+           <form action="/welcome_to_public">
+
+            <button>Создать</button>
+        </form> 
         {% endblock %}
     </body>
 </html>

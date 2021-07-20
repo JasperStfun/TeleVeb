@@ -33,6 +33,7 @@
                         {% else %}
                             <a class="nav-link" id="link" href="{{ url_for('index') }}">Home</a>
                             <a class="nav-link" id="link" href="{{ url_for('welcome_to_chat') }}">Go chat!</a>
+                            <a class="nav-link" id="link" href="{{ url_for('welcome_to_public') }}">Go public!</a>
                             <a class="nav-link" id="link" href="{{ url_for('user_profile', pk=current_user.id) }}">My profile</a>
                         {% endif %}
                     </div>

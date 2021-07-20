@@ -38,6 +38,8 @@ class User(UserMixin, db.Model):
                                      primaryjoin=(black_list.c.user_id == id),
                                      secondaryjoin=(black_list.c.banned_id == id),
                                      backref=db.backref('black_list', lazy='dynamic'), lazy='dynamic')
+    public = db.relationship('Public_chat', backref='author', lazy='dynamic')
+
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -80,6 +82,7 @@ class Message(db.Model):
     content = db.Column(db.Text, nullable=True)
     published = db.Column(db.DateTime, index=True)
     message_chat_id = db.Column(db.Integer, db.ForeignKey('chat.id'))
+    public_message_id = db.Column(db.Integer, db.ForeignKey('public_chat.id'))
 
     def __repr__(self):
         return (f'<Message_id: {self.id} Chat_id: {self.message_chat_id}'
@@ -102,3 +105,9 @@ class Chat(db.Model):
 class UserArchive(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(21), nullable=False, unique=True)
+
+
+class Public_chat(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    users = db.Column(db.Integer, db.ForeignKey('user.id'))
+    unique_number = db.Column(db.String, nullable=False, unique=True)

@@ -55,6 +55,7 @@ class ChatForm(FlaskForm):
                          render_kw={"class": "btn btn-outline-primary"})
 
 
+
 class SearchForm(FlaskForm):
     search = SearchField('Search', validators=[DataRequired()],
                          render_kw={"class": "form-control"})
@@ -121,3 +122,7 @@ class PrivacyEditForm(FlaskForm):
     submit = SubmitField('Change',
                          render_kw={"class": "btn btn-outline-primary"})
 
+
+class CreatePublic(FlaskForm):
+    submit = SubmitField('Create',
+                         render_kw={"class": "btn btn-outline-primary"})

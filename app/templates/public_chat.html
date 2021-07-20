@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Чат {{ public.id }}</h3>
+                <div class="messages" style="overflow:auto; width: auto; height: 290px;">
+                    {% for message in all_messages %}<br>
+                        {{ message.published.strftime('%Y.%m.%d %H:%M') }}<br>
+                        <img src='{{ message.send_user_username.avatar }}' height="35" width="35">{{ message.send_user_username.username }}: {{ message.content }}<br>
+                    {% endfor %}
+                </div><br>
+            </div>
+            <div class="col-md-6">
+                <p>{{ chat_form.user_message.label }}<br> 
+                {{ chat_form.user_message(rows='10',cols='100') }}<br>
+                <button class="btn btn-outline-primary" id="sendbutton">Send</button>
+                </p>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var objDiv = document.querySelector(".messages");
+            $(document).ready(function() {
+                var socket = io.connect('http://127.0.0.1:5000');
+
+                socket.on('connect', function() {
+                    socket.emit('join_public', {{ public }});
+                objDiv.scrollTop = objDiv.scrollHeight;
+                    
+                });
+                socket.on('display message', function(msg) {
+                    $(".messages").append('<br>'+msg+'</br>');
+                    console.log('Received message');
+                
+                objDiv.scrollTop = objDiv.scrollHeight;
+                });
+
+                $('#sendbutton').on('click', function() {
+                    socket.emit('send message', $('#user_message').val(), {{ public }});
+                    $('#user_message').val('');
+                });
+            });
+    </script>
+{% endblock %}

@@ -3,25 +3,29 @@ import uuid
 from flask import render_template, flash, redirect, request, url_for
 from app import app, db, socketio
 from app.forms import ChatForm, EmailEditForm, LoginForm, ProfileForm, RegistrationForm, UsernameEditForm, \
-    PrivacyEditForm
+    PrivacyEditForm, CreatePublic
 from app.forms import SearchForm
 from flask_login import current_user, login_user, login_required, logout_user
-from app.model import Message, User, Chat, UserArchive
+from app.model import Message, User, Chat, UserArchive, Public_chat
 from werkzeug.urls import url_parse
 from flask_socketio import emit, join_room
 from datetime import datetime
-from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename, validate_arguments
 import os
 from PIL import Image, ImageOps, ImageDraw
 
 
 @app.route('/')
-@app.route('/index')
+@app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
     user = User.query.filter(User.id == current_user.id).first()
     avatar = user.avatar
-    return render_template('index.html', title='Home', current_user=current_user, avatar=avatar)
+    form = CreatePublic()
+    if form.validate_on_submit():
+        create_public(user=user)
+    return render_template('index.html', title='Home', current_user=current_user, avatar=avatar,
+                           form=form)
 
 
 @app.route('/friends/<username>')
@@ -156,6 +160,59 @@ def logout():
     return redirect(url_for('index'))
 
 
+@app.route('/welcome_to_public/', methods=['GET', 'POST'])
+def welcome_to_public():
+    if current_user.is_authenticated:
+        users = User.query.filter(User.username != current_user.username).all()
+        public = Public_chat.query.filter(Public_chat.id)
+        search_form = SearchForm()
+        if search_form.validate_on_submit():
+            content = search_form.search.data
+            search_result = User.query.filter(User.username == content).first()
+            if search_result is not None:
+                search_result = search_result.username
+                return render_template('welcome_to_public.html', users=users, search_form=search_form,
+                                       search_result=search_result)
+            else:
+                flash('User not found')
+                return render_template('welcome_to_public.html',
+                                       users=users, search_form=search_form)
+        else:
+            return render_template('welcome_to_public.html',
+                                   users=users, search_form=search_form, public=public)
+    flash('Login or register')
+    return redirect(url_for('login'))
+
+
+@app.route('/welcome_to_public/<pk>', methods=['GET', 'POST'])
+def public_chat(pk):
+    if current_user.is_authenticated:
+        user = current_user
+        public = Public_chat.query.filter(Public_chat.id == pk).first_or_404()
+        if public is None:
+            public = create_public(user, public)
+            public_id = public.id
+        else:
+            public_id = public.id
+        public_form = ChatForm()
+        all_messages = Message.query.filter(Message.public_message_id == public_id).all()
+        return render_template('public_chat.html', user=user, public=public, public_id=public_id,
+                               public_form=public_form, all_messages=all_messages)
+    flash('Login or register')
+    return redirect(url_for('login'))
+
+
+def create_public(user, public):
+    is_uniq_number_exists = True
+    while is_uniq_number_exists:
+        unique_number = str(uuid.uuid4())
+        is_uniq_number_exists = Chat.query.filter(Chat.unique_number == unique_number).first()
+    public = Public_chat(users=user.id, unique_number=unique_number)
+    db.session.add(public)
+    db.session.commit()
+    return public
+
+
 @app.route('/welcome_to_chat/', methods=['GET', 'POST'])
 def welcome_to_chat():
     if current_user.is_authenticated:
@@ -238,6 +295,13 @@ def handle_message(message, chat_id):
 def join(chat_id):
     chat = Chat.query.filter(Chat.id == chat_id).first_or_404()
     room = chat.unique_number
+    join_room(room)
+
+
+@socketio.on('join_public')
+def join_public(public_id):
+    public = Public_chat.query.filter(Public_chat.id == public_id).first_or_404()
+    room = public.unique_number
     join_room(room)
 
 

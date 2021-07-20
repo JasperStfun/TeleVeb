@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Welcome to chat {{ current_user.username }}!</h3><br>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-4">
+            <h5>Your contacts:</h5>
+            <div class="list-group">
+                {% for publics in public %}
+                    <a href="{{ public.id }}">{{ public }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <form action="" method="POST">
+                {{ search_form.hidden_tag() }}
+                <div class="form-group">
+                    {{ search_form.search.label}}<br>
+                    {{ search_form.search() }}<br>
+                    {{ search_form.submit() }}<br>
+                    <h6>{{ search_result }}</h6>
+                </div>
+            </form>
+        </div>
+{% endblock %}
